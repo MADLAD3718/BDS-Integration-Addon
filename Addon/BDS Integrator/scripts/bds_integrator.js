@@ -4,6 +4,7 @@ import { variables } from "mojang-minecraft-server-admin";
 import { chat } from "./chat";
 import { commands } from "./commands";
 import { voice } from "./voice";
+import { queueCheck } from "./queue";
 
 world.events.worldInitialize.subscribe(() => {
     const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
@@ -31,3 +32,4 @@ if (variables.get("enable-voice") === true) {
 }
 
 commands();
+queueCheck(1);
