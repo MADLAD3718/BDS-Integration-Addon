@@ -1,9 +1,6 @@
-<<<<<<< Updated upstream
 import { BeforeChatEvent, world } from "mojang-minecraft";
-=======
 import { world } from "mojang-minecraft";
 import { variables } from "mojang-minecraft-server-admin";
->>>>>>> Stashed changes
 import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
 
 /**
