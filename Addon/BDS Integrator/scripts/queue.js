@@ -14,7 +14,7 @@ export function queueCheck(interval) {
 
             http.request(request).then(response => {
                 // world.getDimension('overworld').runCommand(`say Response: ${response.body}`);
-                JSON.parse(response.body).forEach((op, i) => {
+                JSON.parse(response.body).forEach(op => {
                     world.getDimension('overworld').runCommand(op);
                 })
             });

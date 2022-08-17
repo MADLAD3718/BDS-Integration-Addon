@@ -1,4 +1,9 @@
+<<<<<<< Updated upstream
 import { BeforeChatEvent, world } from "mojang-minecraft";
+=======
+import { world } from "mojang-minecraft";
+import { variables } from "mojang-minecraft-server-admin";
+>>>>>>> Stashed changes
 import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
 
 /**
@@ -15,6 +20,7 @@ export function commands(event) {
                 const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
                 request.addHeader("Content-Type", "application/json")
                 request.addHeader("mc-data-type", "account-link")
+                request.addHeader("server-uuid", variables.get('server-uuid'))
                 request.body = JSON.stringify({
                     username: event.sender.name,
                     code: code
@@ -26,11 +32,16 @@ export function commands(event) {
                 event.sender.runCommand(`tellraw @s {"rawtext":[{"text":"Use §d/link§r in DMs with the BDS Integration bot using code §a${code}§r to link your Minecraft account with Discord."}]}`);
                 break;
             case `unlink`:
-                if (event.sender.hasTag('linked')) {
-                    event.sender.runCommand(`tellraw @s {"rawtext":[{"text":"Your Minecraft account is now unlinked with Discord."}]}`);
-                } else {
-                    event.sender.runCommand(`tellraw @s {"rawtext":[{"text":"You haven't linked your Minecraft account with discord yet!"}]}`);
-                }
+                const unlinkRequest = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+                unlinkRequest.addHeader("Content-Type", "application/json")
+                unlinkRequest.addHeader("mc-data-type", "account-unlink")
+                unlinkRequest.addHeader("server-uuid", variables.get('server-uuid'))
+                unlinkRequest.body = JSON.stringify({
+                    username: event.sender.name
+                })
+                unlinkRequest.method = HttpRequestMethod.POST;
+
+                http.request(unlinkRequest);
                 break;
             default:
                 event.sender.runCommand(`tellraw @s {"rawtext":[{"text":"§fList of !bds commands:\n§r§7!bds link§r\n§8Generates a code to link your Minecraft account with discord.§r\n§r§7!bds unlink§r\n§8Unlinks your Minecraft account from discord.§r"}]}`);
