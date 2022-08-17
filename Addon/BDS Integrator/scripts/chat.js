@@ -1,10 +1,12 @@
-import { world } from "mojang-minecraft";
+import { ChatEvent } from "mojang-minecraft";
 import { variables } from "mojang-minecraft-server-admin";
 import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
 
-
-export function chat() {
-    world.events.chat.subscribe(event => {
+/**
+ * Chat event callback. Used in `ChatEventSignal.subscribe`
+ * @param {ChatEvent} event 
+ */
+export function chat(event) {
         const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "chat-message")
@@ -16,5 +18,4 @@ export function chat() {
         request.method = HttpRequestMethod.POST;
 
         http.request(request);
-    })
 }

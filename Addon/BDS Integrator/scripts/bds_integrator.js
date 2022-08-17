@@ -24,12 +24,12 @@ world.events.worldInitialize.subscribe(() => {
 })
 
 if (variables.get("enable-chat") === true) {
-    chat();
+    world.events.chat.subscribe(chat);
 }
 
 if (variables.get("enable-voice") === true) {
-    voice();
+    world.events.tick.subscribe(voice);
 }
 
-commands();
+world.events.beforeChat.subscribe(commands);
 queueCheck(1);
