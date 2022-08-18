@@ -1,56 +1,61 @@
-import { world, TickEvent, Location, EntityQueryOptions } from "mojang-minecraft";
+import { world, Location, EntityQueryOptions } from "mojang-minecraft";
 import { variables } from "mojang-minecraft-server-admin";
 import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
 
-const groups = [];
+const groups = new Set();
+const groupedPlayers = new Set();
 
-/** 
- * TickEvent callback. Used in `TickEventSignal.subscribe`
- * @param {TickEvent} event 
- */
-export function voice(event) {
-    // Update player db for server once every (interval) seconds
-    const interval = 5;
-    if (event.currentTick % (interval * 20) === 0) {
-        // Start Groups from nothing
-        for (const player of world.getPlayers()) {
+export function voice() {
+    world.events.tick.subscribe(event => {
+        // Update player db for server once every (interval) seconds
+        const interval = 5;
+        if (event.currentTick % (interval * 20) === 0) {
+
+            // Update Groups and export them
+            groups.forEach(group => {
+                group.update();
+            })
+
+            // Start Groups from nothing
             const query = new EntityQueryOptions();
-            query.excludeNames = [`${player.name}`];
-            query.excludeTags = [`grouped`];
             query.tags = [`linked`];
-            for (const otherPlayer of world.getPlayers(query)) {
-                const xDist = Math.abs(otherPlayer.location.x - player.location.x);
-                const yDist = Math.abs(otherPlayer.location.y - player.location.y);
-                const zDist = Math.abs(otherPlayer.location.z - player.location.z);
+            for (const player of world.getPlayers(query)) {
+                if (groupedPlayers.has(player.name)) break;
+                query.excludeNames = [`${player.name}`];
+                for (const otherPlayer of world.getPlayers(query)) {
+                    if (groupedPlayers.has(otherPlayer.name)) break;
+                    const xDist = Math.abs(otherPlayer.location.x - player.location.x);
+                    const yDist = Math.abs(otherPlayer.location.y - player.location.y);
+                    const zDist = Math.abs(otherPlayer.location.z - player.location.z);
 
-                const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
-                const inRange = hDist <= variables.get("horizontal-range") && yDist <= variables.get("vertical-range") ? true : false;
+                    const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
+                    const inRange = hDist <= variables.get("horizontal-range") && yDist <= variables.get("vertical-range") ? true : false;
 
-                if (inRange === true) {
-                    player.addTag(`grouped`)
-                    otherPlayer.addTag(`grouped`)
-                    groups.push(
-                        new Group(player, otherPlayer)
-                    )
-                    world.getDimension('overworld').runCommand(`say Grouped ${player.name} & ${otherPlayer.name}`);
+                    if (inRange === true) {
+                        groupedPlayers.add(player.name)
+                        groupedPlayers.add(otherPlayer.name);
+                        groups.add(
+                            new Group(player, otherPlayer)
+                        )
+                        world.getDimension('overworld').runCommand(`say Grouped ${player.name} & ${otherPlayer.name}`);
+                    }
                 }
             }
+            exportGroups();
         }
-
-        // Update Groups and export them
-        exportGroups();
-    }
+    })
+    world.events.playerLeave.subscribe(event => {
+        groupedPlayers.delete(event.playerName);
+    })
 }
 
 function exportGroups() {
     const groupExport = [];
-    groups.forEach((group, i) => {
-        group.getCenter();
-        groupExport[i] = [];
-        group.players.forEach(player => {
-            groupExport[i].push(player.name);
-        })
+    groups.forEach(group => {
+        groupExport.push([...group.players]);
+        // world.getDimension('overworld').runCommand(`say Added ${groupExport} to groupExport[]`);
     })
+    // world.getDimension('overworld').runCommand(`say Sent ${JSON.stringify(groupExport)}`);
     const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
     request.addHeader("Content-Type", "application/json")
     request.addHeader("mc-data-type", "voice-groups")
@@ -60,43 +65,75 @@ function exportGroups() {
     })
     request.method = HttpRequestMethod.POST;
 
-    http.request(request);
+    http.request(request).then(response => {
+        world.getDimension('overworld').runCommand(`say Groups Response: ${response.body}`);
+    });
 }
 
 class Group {
     center = new Location(0, 0, 0);
-    players = [];
+    dimension = '';
+    players = new Set();
     constructor(...args) {
-        args.forEach(player => {
-            this.players.push(player);
+        args.forEach((player, i) => {
+            this.players.add(player.name);
+            if (i === 0) this.dimension = player.dimension.id;
         })
-        this.getCenter();
+        this.update();
     }
     addPlayer(player) {
-        this.players.push(player);
-        this.getCenter();
+        this.players.add(player.name);
+        this.update();
     }
     removePlayer(player) {
-        this.players.splice(this.players.indexOf(player));
-        this.getCenter();
+        this.players.delete(player.name);
+        this.update();
     }
-    getCenter() {
-        let cx = 0;
-        let cy = 0;
-        let cz = 0;
-        this.players.forEach(groupedPlayer => {
-            const x = groupedPlayer.location.x;
-            const y = groupedPlayer.location.y;
-            const z = groupedPlayer.location.z;
-            cx += x;
-            cy += y;
-            cz += z;
+    outOfBounds(player) {
+        const xDist = Math.abs(player.location.x - this.center.x);
+        const yDist = Math.abs(player.location.y - this.center.y);
+        const zDist = Math.abs(player.location.z - this.center.z);
+
+        const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
+        world.getDimension('overworld').runCommand(`say ${player.name} hDist: ${hDist}.`)
+        const outsideRange = hDist <= (variables.get("horizontal-range") / 2 + variables.get("leave-threshold")) && yDist <= (variables.get("vertical-range") / 2) && player.dimension.id === this.dimension ? false : true;
+        if (outsideRange === true) {
+            world.getDimension('overworld').runCommand(`say Removed ${player.name} from group.`)
+            groupedPlayers.delete(player.name);
+            this.players.delete(player.name);
+        }
+        return outsideRange;
+    }
+    update() {
+        let x = 0;
+        let y = 0;
+        let z = 0;
+        this.players.forEach(playerName => {
+            const query = new EntityQueryOptions();
+            query.name = playerName;
+            for (const player of world.getPlayers(query)) {
+                x += player.location.x;
+                y += player.location.y;
+                z += player.location.z;
+            }
         })
-        cx /= this.players.length;
-        cy /= this.players.length;
-        cz /= this.players.length;
-        // world.getDimension('overworld').runCommand(`say Recalculated center to be at (${Math.round(cx)}, ${Math.round(cy)}, ${Math.round(cz)})`);
-        this.center = new Location(cx, cy, cz);
+        x /= this.players.size;
+        y /= this.players.size;
+        z /= this.players.size;
+        world.getDimension('overworld').runCommand(`say Recalculated center to be at (${Math.round(x)}, ${Math.round(y)}, ${Math.round(z)})`);
+        this.center = new Location(x, y, z);
+        this.players.forEach(playerName => {
+            const query = new EntityQueryOptions();
+            query.name = playerName;
+            for (const player of world.getPlayers(query)) {
+                this.outOfBounds(player);
+            }
+        })
+        if (this.players.size === 0) {
+            world.getDimension('overworld').runCommand(`say Disbanded Group`);
+            groups.delete(this);
+            return;
+        }
         return this.center;
     }
 }

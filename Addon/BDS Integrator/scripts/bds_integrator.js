@@ -40,7 +40,7 @@ world.events.worldInitialize.subscribe(() => {
         }
 
         if (variables.get("enable-voice") === true) {
-            world.events.tick.subscribe(voice);
+            voice();
         }
 
         queueCheck(1);

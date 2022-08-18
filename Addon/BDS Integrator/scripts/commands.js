@@ -29,7 +29,7 @@ export function commands(event, validUUID) {
             request.method = HttpRequestMethod.POST;
 
             http.request(request).then(response => {
-                sender.runCommand(`tellraw ${sender.name} {"rawtext":[{"text":"${JSON.parse(response.body)}"}]}`);
+                sender.runCommand(`tellraw "${sender.name}" {"rawtext":[{"text":"${JSON.parse(response.body)}"}]}`);
             });
             break;
         case `unlink`:
