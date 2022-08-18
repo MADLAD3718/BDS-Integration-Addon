@@ -129,7 +129,10 @@ class Group {
                 this.outOfBounds(player);
             }
         })
-        if (this.players.size === 0) {
+        if (this.players.size === 1) {
+            this.players.forEach(player => {
+                groupedPlayers.delete(player);
+            })
             world.getDimension('overworld').runCommand(`say Disbanded Group`);
             groups.delete(this);
             return;
