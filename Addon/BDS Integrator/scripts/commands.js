@@ -23,7 +23,8 @@ export function commands(event, validUUID) {
             request.addHeader("mc-data-type", "account-link")
             request.addHeader("server-uuid", variables.get('server-uuid'))
             request.body = JSON.stringify({
-                username: sender.name
+                username: sender.name,
+                hasTag: sender.hasTag('linked')
             })
             request.method = HttpRequestMethod.POST;
 
@@ -44,7 +45,7 @@ export function commands(event, validUUID) {
             http.request(unlinkRequest);
             break;
         case `status`:
-            sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.status}"}]}`);
+            sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.status(sender)}"}]}`);
             break;
         default:
             sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.commands}"}]}`);
