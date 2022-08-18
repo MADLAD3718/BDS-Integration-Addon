@@ -1,8 +1,8 @@
 {
     // UUID used to differenciate your server from others when linking to BDS Integrator Bot
     // You will need this UUID to connect your server with discord
-    // You can generate on using https://www.uuidgenerator.net/ (use V4)
-    // Make sure you do not share this uuid with anyone once you've set it
+    // If you haven't set one yet or need a new one you can generate it using https://www.uuidgenerator.net/ (use V4)
+    // Make sure you do not share this uuid with anyone once you've set it.
     "server-uuid": "2b6d0635-9eff-4d6e-94ae-e77f41b4a648",
     // Integration Components
     "enable-chat": true,
@@ -11,4 +11,5 @@
     "horizontal-range": 10,
     "vertical-range": 5,
     "leave-threshold": 5
+    // You will need to restart your server for any chaneges to this file to apply.
 }

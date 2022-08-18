@@ -17,6 +17,7 @@ export function voice(event) {
             const query = new EntityQueryOptions();
             query.excludeNames = [`${player.name}`];
             query.excludeTags = [`grouped`];
+            query.tags = [`linked`];
             for (const otherPlayer of world.getPlayers(query)) {
                 const xDist = Math.abs(otherPlayer.location.x - player.location.x);
                 const yDist = Math.abs(otherPlayer.location.y - player.location.y);
@@ -35,13 +36,32 @@ export function voice(event) {
                 }
             }
         }
-        // Update Groups
-        groups.forEach(group => {
-            group.getCenter();
-        })
+
+        // Update Groups and export them
+        exportGroups();
     }
 }
 
+function exportGroups() {
+    const groupExport = [];
+    groups.forEach((group, i) => {
+        group.getCenter();
+        groupExport[i] = [];
+        group.players.forEach(player => {
+            groupExport[i].push(player.name);
+        })
+    })
+    const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+    request.addHeader("Content-Type", "application/json")
+    request.addHeader("mc-data-type", "voice-groups")
+    request.addHeader("server-uuid", variables.get('server-uuid'))
+    request.body = JSON.stringify({
+        groups: groupExport
+    })
+    request.method = HttpRequestMethod.POST;
+
+    http.request(request);
+}
 
 class Group {
     center = new Location(0, 0, 0);
@@ -61,10 +81,6 @@ class Group {
         this.getCenter();
     }
     getCenter() {
-        if (this.players.length === 0) {
-            delete this;
-            return;
-        }
         let cx = 0;
         let cy = 0;
         let cz = 0;
@@ -79,7 +95,7 @@ class Group {
         cx /= this.players.length;
         cy /= this.players.length;
         cz /= this.players.length;
-        world.getDimension('overworld').runCommand(`say Recalculated center to be at (${Math.round(cx)}, ${Math.round(cy)}, ${Math.round(cz)})`);
+        // world.getDimension('overworld').runCommand(`say Recalculated center to be at (${Math.round(cx)}, ${Math.round(cy)}, ${Math.round(cz)})`);
         this.center = new Location(cx, cy, cz);
         return this.center;
     }
