@@ -28,7 +28,7 @@ export function commands(event, validUUID) {
             request.method = HttpRequestMethod.POST;
 
             http.request(request).then(response => {
-                sender.runCommand(`tellraw ${sender.name} {"rawtext":[{"text":"Use §d/link§r in DMs with the BDS Integration bot using code §a${JSON.parse(response.body)}§r to link your Minecraft account with Discord."}]}`);
+                sender.runCommand(`tellraw ${sender.name} {"rawtext":[{"text":"${JSON.parse(response.body)}"}]}`);
             });
             break;
         case `unlink`:
