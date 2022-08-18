@@ -10,27 +10,26 @@ import { messages } from "./messages";
 export function commands(event, validUUID) {
     if (event.message.startsWith("!bds") === false) return
     event.cancel = true;
+    const sender = event.sender;
     if (validUUID === false) {
-        event.sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.invalidUUID}"}]}`);
+        sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.invalidUUID}"}]}`);
         return;
     }
     const command = event.message.slice(4).trim();
     switch (command) {
         case `link`:
-            const code = `${Math.round(Math.random() * 9999)}`.padStart(4, '0');
             const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
             request.addHeader("Content-Type", "application/json")
             request.addHeader("mc-data-type", "account-link")
             request.addHeader("server-uuid", variables.get('server-uuid'))
             request.body = JSON.stringify({
-                username: event.sender.name,
-                code: code
+                username: sender.name
             })
             request.method = HttpRequestMethod.POST;
 
-            http.request(request);
-
-            event.sender.runCommand(`tellraw @s {"rawtext":[{"text":"Use §d/link§r in DMs with the BDS Integration bot using code §a${code}§r to link your Minecraft account with Discord."}]}`);
+            http.request(request).then(response => {
+                sender.runCommand(`tellraw ${sender.name} {"rawtext":[{"text":"Use §d/link§r in DMs with the BDS Integration bot using code §a${JSON.parse(response.body)}§r to link your Minecraft account with Discord."}]}`);
+            });
             break;
         case `unlink`:
             const unlinkRequest = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
@@ -38,17 +37,17 @@ export function commands(event, validUUID) {
             unlinkRequest.addHeader("mc-data-type", "account-unlink")
             unlinkRequest.addHeader("server-uuid", variables.get('server-uuid'))
             unlinkRequest.body = JSON.stringify({
-                username: event.sender.name
+                username: sender.name
             })
             unlinkRequest.method = HttpRequestMethod.POST;
 
             http.request(unlinkRequest);
             break;
         case `status`:
-            event.sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.status}"}]}`);
+            sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.status}"}]}`);
             break;
         default:
-            event.sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.commands}"}]}`);
+            sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.commands}"}]}`);
             break;
     }
 }
