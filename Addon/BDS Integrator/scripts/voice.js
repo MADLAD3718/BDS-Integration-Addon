@@ -16,14 +16,16 @@ export function voice() {
                 group.update();
             })
 
-            // Start Groups from nothing
+            // Groups
             const query = new EntityQueryOptions();
             query.tags = [`linked`];
+            // For all players that have linked their accounts and aren't in a group
             for (const player of world.getPlayers(query)) {
-                if (groupedPlayers.has(player.name)) break;
+                if (groupedPlayers.has(player.name)) continue;
                 query.excludeNames = [`${player.name}`];
+                // For the other player that isn't in a group
                 for (const otherPlayer of world.getPlayers(query)) {
-                    if (groupedPlayers.has(otherPlayer.name)) break;
+                    if (groupedPlayers.has(otherPlayer.name)) continue;
                     const xDist = Math.abs(otherPlayer.location.x - player.location.x);
                     const yDist = Math.abs(otherPlayer.location.y - player.location.y);
                     const zDist = Math.abs(otherPlayer.location.z - player.location.z);
@@ -40,11 +42,30 @@ export function voice() {
                         world.getDimension('overworld').runCommand(`say Grouped ${player.name} & ${otherPlayer.name}`);
                     }
                 }
+                if (groupedPlayers.has(player.name)) continue;
+                // If no other players that were groupless were found, look for groups to join instead
+                groups.forEach(group => {
+                    const xDist = Math.abs(group.center.x - player.location.x);
+                    const yDist = Math.abs(group.center.y - player.location.y);
+                    const zDist = Math.abs(group.center.z - player.location.z);
+
+                    const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
+                    const inRange = hDist <= variables.get("horizontal-range") && yDist <= variables.get("vertical-range") ? true : false;
+                    const groupPlayers = [...group.players];
+                    if (inRange === true) {
+                        world.getDimension('overworld').runCommand(`say Adding ${player.name} to group ${groupPlayers}`);
+                        groupedPlayers.add(player.name);
+                        group.players.add(player.name);
+                    }
+                })
             }
             exportGroups();
         }
     })
     world.events.playerLeave.subscribe(event => {
+        groups.forEach(group => {
+            group.players.delete(event.playerName);
+        })
         groupedPlayers.delete(event.playerName);
     })
 }
@@ -95,16 +116,17 @@ class Group {
         const zDist = Math.abs(player.location.z - this.center.z);
 
         const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
-        world.getDimension('overworld').runCommand(`say ${player.name} hDist: ${hDist}.`)
-        const outsideRange = hDist <= (variables.get("horizontal-range") / 2 + variables.get("leave-threshold")) && yDist <= (variables.get("vertical-range") / 2) && player.dimension.id === this.dimension ? false : true;
+        // world.getDimension('overworld').runCommand(`say ${player.name} hDist: ${hDist}.`)
+        const outsideRange = hDist <= ((variables.get("horizontal-range") + variables.get("leave-threshold")) / 2) && yDist <= (variables.get("vertical-range") / 2) && player.dimension.id === this.dimension ? false : true;
         if (outsideRange === true) {
             world.getDimension('overworld').runCommand(`say Removed ${player.name} from group.`)
             groupedPlayers.delete(player.name);
             this.players.delete(player.name);
+            this.getCenter();
         }
         return outsideRange;
     }
-    update() {
+    getCenter() {
         let x = 0;
         let y = 0;
         let z = 0;
@@ -120,8 +142,11 @@ class Group {
         x /= this.players.size;
         y /= this.players.size;
         z /= this.players.size;
-        world.getDimension('overworld').runCommand(`say Recalculated center to be at (${Math.round(x)}, ${Math.round(y)}, ${Math.round(z)})`);
+        // world.getDimension('overworld').runCommand(`say Recalculated center to be at (${Math.round(x)}, ${Math.round(y)}, ${Math.round(z)})`);
         this.center = new Location(x, y, z);
+    }
+    update() {
+        this.getCenter();
         this.players.forEach(playerName => {
             const query = new EntityQueryOptions();
             query.name = playerName;
@@ -129,7 +154,7 @@ class Group {
                 this.outOfBounds(player);
             }
         })
-        if (this.players.size === 1) {
+        if (this.players.size <= 1) {
             this.players.forEach(player => {
                 groupedPlayers.delete(player);
             })
