@@ -10,6 +10,7 @@
     // Proximity Voice Chat Params
     "horizontal-range": 10,
     "vertical-range": 5,
-    "leave-threshold": 5
+    // How many blocks to add to the range of each voice group per extra player
+    "player-addition": 5
     // You will need to restart your server for any chaneges to this file to apply.
 }
