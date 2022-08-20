@@ -6,74 +6,66 @@ const groups = new Set();
 const groupedPlayers = new Set();
 
 export function voice() {
-    world.events.tick.subscribe(event => {
-        // Update player db for server once every (interval) seconds
-        const interval = 5;
-        if (event.currentTick % (interval * 20) === 0) {
+    world.events.tick.subscribe(() => {
+        // Update Groups
+        groups.forEach(group => {
+            group.update();
+        })
 
-            // Update Groups and export them
-            groups.forEach(group => {
-                group.update();
-            })
+        // Groups
+        const query = new EntityQueryOptions();
+        query.tags = [`linked`];
+        // For all players that have linked their accounts and aren't in a group
+        for (const player of world.getPlayers(query)) {
+            if (groupedPlayers.has(player.name)) continue;
+            query.excludeNames = [`${player.name}`];
+            // For the other player that isn't in a group
+            for (const otherPlayer of world.getPlayers(query)) {
+                if (groupedPlayers.has(otherPlayer.name)) continue;
+                const xDist = Math.abs(otherPlayer.location.x - player.location.x);
+                const yDist = Math.abs(otherPlayer.location.y - player.location.y);
+                const zDist = Math.abs(otherPlayer.location.z - player.location.z);
 
-            // Groups
-            const query = new EntityQueryOptions();
-            query.tags = [`linked`];
-            // For all players that have linked their accounts and aren't in a group
-            for (const player of world.getPlayers(query)) {
-                if (groupedPlayers.has(player.name)) continue;
-                query.excludeNames = [`${player.name}`];
-                // For the other player that isn't in a group
-                for (const otherPlayer of world.getPlayers(query)) {
-                    if (groupedPlayers.has(otherPlayer.name)) continue;
-                    const xDist = Math.abs(otherPlayer.location.x - player.location.x);
-                    const yDist = Math.abs(otherPlayer.location.y - player.location.y);
-                    const zDist = Math.abs(otherPlayer.location.z - player.location.z);
+                const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
+                const inRange = hDist <= variables.get("horizontal-range") && yDist <= variables.get("vertical-range") && player.dimension.id === otherPlayer.dimension.id ? true : false;
 
-                    const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
-                    const inRange = hDist <= variables.get("horizontal-range") && yDist <= variables.get("vertical-range") ? true : false;
-
-                    if (inRange === true) {
-                        groupedPlayers.add(player.name)
-                        groupedPlayers.add(otherPlayer.name);
-                        groups.add(
-                            new Group(player, otherPlayer)
-                        )
-                        world.getDimension('overworld').runCommand(`say Grouped ${player.name} & ${otherPlayer.name}`);
-                    }
+                if (inRange === true) {
+                    groupedPlayers.add(player.name)
+                    groupedPlayers.add(otherPlayer.name);
+                    groups.add(
+                        new Group(player, otherPlayer)
+                    )
+                    world.getDimension('overworld').runCommand(`say Grouped ${player.name} & ${otherPlayer.name}`);
+                    exportGroups();
                 }
-                if (groupedPlayers.has(player.name)) continue;
-                // If no other players that were groupless were found, look for groups to join instead
-                groups.forEach(group => {
-                    const xDist = Math.abs(group.center.x - player.location.x);
-                    const yDist = Math.abs(group.center.y - player.location.y);
-                    const zDist = Math.abs(group.center.z - player.location.z);
-
-                    const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
-                    const inRange = hDist <= variables.get("horizontal-range") && yDist <= variables.get("vertical-range") ? true : false;
-                    const groupPlayers = [...group.players];
-                    if (inRange === true) {
-                        world.getDimension('overworld').runCommand(`say Adding ${player.name} to group ${groupPlayers}`);
-                        groupedPlayers.add(player.name);
-                        group.players.add(player.name);
-                    }
-                })
             }
-            exportGroups();
+            if (groupedPlayers.has(player.name)) continue;
+            // If no other players that were groupless were found, look for groups to join instead
+            groups.forEach(group => {
+                const xDist = Math.abs(group.center.x - player.location.x);
+                const yDist = Math.abs(group.center.y - player.location.y);
+                const zDist = Math.abs(group.center.z - player.location.z);
+
+                const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
+                const inRange = hDist <= variables.get("horizontal-range") && yDist <= variables.get("vertical-range") && player.dimension.id === group.dimension ? true : false;
+                const groupPlayers = [...group.players];
+                if (inRange === true) {
+                    group.addPlayer(player.name);
+                }
+            })
         }
     })
     world.events.playerLeave.subscribe(event => {
         groups.forEach(group => {
-            group.players.delete(event.playerName);
+            group.removePlayer(event.playerName);
         })
-        groupedPlayers.delete(event.playerName);
     })
 }
 
 function exportGroups() {
     const groupExport = [];
     groups.forEach(group => {
-        groupExport.push([...group.players]);
+        if (group.players.size > 1) groupExport.push([...group.players]);
         // world.getDimension('overworld').runCommand(`say Added ${groupExport} to groupExport[]`);
     })
     // world.getDimension('overworld').runCommand(`say Sent ${JSON.stringify(groupExport)}`);
@@ -102,13 +94,21 @@ class Group {
         })
         this.update();
     }
-    addPlayer(player) {
-        this.players.add(player.name);
-        this.update();
+    addPlayer(playername) {
+        // world.getDimension('overworld').runCommand(`say Added ${playername} to group.`)
+        groupedPlayers.add(playername);
+        this.players.add(playername);
+        this.getCenter();
+        exportGroups();
     }
-    removePlayer(player) {
-        this.players.delete(player.name);
-        this.update();
+    removePlayer(playername) {
+        // world.getDimension('overworld').runCommand(`say Removed ${playername} from group.`)
+        groupedPlayers.delete(playername);
+        this.players.delete(playername);
+        if (this.players.size >= 1) {
+            this.getCenter();
+        }
+        exportGroups();
     }
     outOfBounds(player) {
         const xDist = Math.abs(player.location.x - this.center.x);
@@ -117,12 +117,9 @@ class Group {
 
         const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
         // world.getDimension('overworld').runCommand(`say ${player.name} hDist: ${hDist}.`)
-        const outsideRange = hDist <= ((variables.get("horizontal-range") + variables.get("leave-threshold")) / 2) && yDist <= (variables.get("vertical-range") / 2) && player.dimension.id === this.dimension ? false : true;
+        const outsideRange = hDist <= (variables.get("horizontal-range") / 2 + variables.get("leave-threshold")) && yDist <= (variables.get("vertical-range") + variables.get("leave-threshold") / 2) && player.dimension.id === this.dimension ? false : true;
         if (outsideRange === true) {
-            world.getDimension('overworld').runCommand(`say Removed ${player.name} from group.`)
-            groupedPlayers.delete(player.name);
-            this.players.delete(player.name);
-            this.getCenter();
+            this.removePlayer(player.name);
         }
         return outsideRange;
     }
@@ -160,7 +157,6 @@ class Group {
             })
             world.getDimension('overworld').runCommand(`say Disbanded Group`);
             groups.delete(this);
-            return;
         }
         return this.center;
     }
