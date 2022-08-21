@@ -36,7 +36,6 @@ export function voice() {
                         new Group([player, otherPlayer])
                     )
                     world.getDimension('overworld').runCommand(`say Grouped ${player.name} & ${otherPlayer.name}`);
-                    exportGroups();
                 }
             }
             if (groupedPlayers.has(player.name)) continue;
@@ -57,26 +56,32 @@ export function voice() {
         // Group Merging
         groups.forEach(group => {
             groups.forEach(otherGroup => {
-                if (otherGroup.center === group.center) return;
+                if (otherGroup.id === group.id) return;
                 const xDist = Math.abs(otherGroup.center.x - group.center.x);
                 const yDist = Math.abs(otherGroup.center.y - group.center.y);
                 const zDist = Math.abs(otherGroup.center.z - group.center.z);
                 const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
                 if ((hDist <= group.range.h || hDist <= otherGroup.range.h) && (yDist <= group.range.v || yDist <= otherGroup.range.v)) {
                     world.getDimension('overworld').runCommand(`say Group ${[...group.players]} is in range of ${[...otherGroup.players]}`);
-                    const newPlayers = [];
-                    [...group.players, ...otherGroup.players].forEach(playerName => {
-                        world.getDimension('overworld').runCommand(`say Group has: ${playerName}`);
-                        const query = new EntityQueryOptions();
-                        query.name = playerName;
-                        for (const player of world.getPlayers(query)) {
-                            newPlayers.push(player);
-                        }
+                    otherGroup.players.forEach(playerName => {
+                        group.players.add(playerName);
                     })
-                    groups.add(
-                        new Group(newPlayers)
-                    );
-                    groups.delete(group);
+                    group.getCenter();
+
+                    // Group merge request
+                    const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+                    request.addHeader("Content-Type", "application/json")
+                    request.addHeader("mc-data-type", "voice-group-merge")
+                    request.addHeader("server-uuid", variables.get('server-uuid'))
+                    request.body = JSON.stringify({
+                        merged: group.id,
+                        deleted: otherGroup.id
+                    })
+                    request.method = HttpRequestMethod.POST;
+                    http.request(request).then(response => {
+                        world.getDimension('overworld').runCommand(`say Groups Response: ${response.body}`);
+                    });
+
                     groups.delete(otherGroup);
                     groups.forEach(group => {
                         world.getDimension('overworld').runCommand(`say The ONE GROUP is ${[...group.players]}`);
@@ -87,33 +92,11 @@ export function voice() {
         })
     })
     world.events.playerLeave.subscribe(event => {
+        groupedPlayers.delete(event.playerName);
         groups.forEach(group => {
-            group.removePlayer(event.playerName);
+            group.removePlayer(event.playerName)
         })
     })
-}
-
-function exportGroups() {
-    const groupExport = {};
-    groups.forEach(group => {
-        if (group.players.size > 1) groupExport[group.id] = {
-            members: [...group.players]
-        }
-        // world.getDimension('overworld').runCommand(`say Added ${groupExport} to groupExport[]`);
-    })
-    // world.getDimension('overworld').runCommand(`say Sent ${JSON.stringify(groupExport)}`);
-    const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
-    request.addHeader("Content-Type", "application/json")
-    request.addHeader("mc-data-type", "voice-groups")
-    request.addHeader("server-uuid", variables.get('server-uuid'))
-    request.body = JSON.stringify({
-        groups: groupExport
-    })
-    request.method = HttpRequestMethod.POST;
-
-    http.request(request).then(response => {
-        world.getDimension('overworld').runCommand(`say Groups Response: ${response.body}`);
-    });
 }
 
 class Group {
@@ -125,45 +108,94 @@ class Group {
     dimension = '';
     players = new Set();
     constructor(playerArray) {
-        try {
-            playerArray.forEach((player, i) => {
-                this.players.add(player.name);
-                if (i === 0) this.dimension = player.dimension.id;
-            })
-            this.id = Math.round(Math.random() * 99999999).toString().padStart(8, '0');
-            this.update();            
-        } catch (error) {
-            world.getDimension('overworld').runCommand(`say ${error}${error.stack}`);
-        }
+        playerArray.forEach((player, i) => {
+            this.players.add(player.name);
+            if (i === 0) this.dimension = player.dimension.id;
+        })
+        this.id = Math.round(Math.random() * 99999999).toString().padStart(8, '0');
+        this.update();
+
+        const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+        request.addHeader("Content-Type", "application/json")
+        request.addHeader("mc-data-type", "voice-group-create")
+        request.addHeader("server-uuid", variables.get('server-uuid'))
+        request.body = JSON.stringify({
+            group: this.id
+        })
+        request.method = HttpRequestMethod.POST;
+
+        http.request(request).then(response => {
+            world.getDimension('overworld').runCommand(`say Create Group Response: ${response.body}`);
+        });
     }
     addPlayer(playername) {
-        // world.getDimension('overworld').runCommand(`say Added ${playername} to group.`)
         groupedPlayers.add(playername);
         this.players.add(playername);
         this.getCenter();
-        exportGroups();
+        const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+        request.addHeader("Content-Type", "application/json")
+        request.addHeader("mc-data-type", "voice-group-add")
+        request.addHeader("server-uuid", variables.get('server-uuid'))
+        request.body = JSON.stringify({
+            group: this.id,
+            newMember: playername
+        })
+        request.method = HttpRequestMethod.POST;
+
+        http.request(request).then(response => {
+            world.getDimension('overworld').runCommand(`say Add Player Response: ${response.body}`);
+        });
     }
     removePlayer(playername) {
         // world.getDimension('overworld').runCommand(`say Removed ${playername} from group.`)
         groupedPlayers.delete(playername);
         this.players.delete(playername);
-        if (this.players.size >= 1) {
+        if (this.players.size <= 1 && this.deleted !== true) {
+            this.deleted = true;
+            this.players.forEach(player => {
+                groupedPlayers.delete(player);
+            })
+            world.getDimension('overworld').runCommand(`say Disbanded Group`);
+            const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+            request.addHeader("Content-Type", "application/json")
+            request.addHeader("mc-data-type", "voice-group-disband")
+            request.addHeader("server-uuid", variables.get('server-uuid'))
+            request.body = JSON.stringify({
+                group: this.id
+            })
+            request.method = HttpRequestMethod.POST;
+            groups.delete(this);
+
+            http.request(request).then(response => {
+                world.getDimension('overworld').runCommand(`say Disband Group Response: ${response.body}`);
+            });
+        } else {
             this.getCenter();
+
+            const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+            request.addHeader("Content-Type", "application/json")
+            request.addHeader("mc-data-type", "voice-group-remove")
+            request.addHeader("server-uuid", variables.get('server-uuid'))
+            request.body = JSON.stringify({
+                group: this.id,
+                members: [...this.players],
+                removedMember: playername
+            })
+            request.method = HttpRequestMethod.POST;
+
+            http.request(request).then(response => {
+                world.getDimension('overworld').runCommand(`say Remove Player Response: ${response.body}`);
+            });
         }
-        exportGroups();
     }
     outOfBounds(player) {
         const xDist = Math.abs(player.location.x - this.center.x);
         const yDist = Math.abs(player.location.y - this.center.y);
         const zDist = Math.abs(player.location.z - this.center.z);
-
         const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
-        // world.getDimension('overworld').runCommand(`say ${player.name} hDist: ${hDist}.`)
-        // eventually increase this by amount of players
         const outsideRange = hDist <= this.range.h && yDist <= this.range.v && player.dimension.id === this.dimension ? false : true;
-        if (outsideRange === true) {
+        if (outsideRange === true || player.hasTag('linked') === false) {
             this.removePlayer(player.name);
-            this.getRange();
         }
         return outsideRange;
     }
@@ -183,11 +215,10 @@ class Group {
         x /= this.players.size;
         y /= this.players.size;
         z /= this.players.size;
-        // world.getDimension('overworld').runCommand(`say Recalculated center to be at (${Math.round(x)}, ${Math.round(y)}, ${Math.round(z)})`);
         this.center = new Location(x, y, z);
     }
     getRange() {
-        this.range.h = (variables.get("horizontal-range") + (this.players.size - 1) * variables.get("player-addition")) / 2;
+        this.range.h = (variables.get("horizontal-range") / 2) + (this.players.size - 1) * variables.get("player-addition")
         this.range.v = (variables.get("vertical-range") + (this.players.size - 1) * variables.get("player-addition") / 2) / 2;
     }
     update() {
@@ -199,14 +230,6 @@ class Group {
             for (const player of world.getPlayers(query)) {
                 this.outOfBounds(player);
             }
-        })
-        if (this.players.size <= 1) {
-            this.players.forEach(player => {
-                groupedPlayers.delete(player);
-            })
-            world.getDimension('overworld').runCommand(`say Disbanded Group`);
-            groups.delete(this);
-        }
-        return this.center;
+        });
     }
 }
