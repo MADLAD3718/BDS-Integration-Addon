@@ -42,5 +42,3 @@ world.events.worldInitialize.subscribe(() => {
         queueCheck(1);
     });
 });
-
-

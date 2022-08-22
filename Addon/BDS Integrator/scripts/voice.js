@@ -6,8 +6,7 @@ const groups = new Set();
 const groupedPlayers = new Set();
 
 export function voice() {
-    const tickSub = world.events.tick.subscribe(event => {
-        // if (event.currentTick % 5 !== 0) return;
+    world.events.tick.subscribe(() => {
         // Update Groups:
         groups.forEach(group => {
             group.update();
@@ -19,7 +18,7 @@ export function voice() {
         };
         // For all players that have linked their accounts and aren't in a group
         for (const player of world.getPlayers(query)) {
-            if (groupedPlayers.has(player.name)) continue;
+            if (groupedPlayers.has(player.name) === true) continue;
             query.excludeNames = [`${player.name}`];
             // For the other player that isn't in a group
             for (const otherPlayer of world.getPlayers(query)) {
@@ -94,7 +93,6 @@ export function voice() {
         })
     })
     world.events.playerLeave.subscribe(event => {
-        world.events.playerLeave.unsubscribe(tickSub);
         groupedPlayers.delete(event.playerName);
         groups.forEach(group => {
             // world.getDimension('overworld').runCommand(`say Removing ${event.playerName} from ${[...group.players]}`);
@@ -105,7 +103,7 @@ export function voice() {
 
 class Group {
     range = {
-        h: variables.get("horzontal-range") / 2,
+        h: variables.get("horzontal-range"),
         v: variables.get("vertical-range")
     }
     center = new Location(0, 0, 0);
@@ -141,7 +139,7 @@ class Group {
         });
     }
     addPlayer(playername) {
-        // world.getDimension('overworld').runCommand(`say Added ${playername} to ${[...this.players]}`);
+        world.getDimension('overworld').runCommand(`say Added ${playername} to ${[...this.players]}`);
         groupedPlayers.add(playername);
         this.players.add(playername);
         this.getCenter();
@@ -164,9 +162,8 @@ class Group {
         // world.getDimension('overworld').runCommand(`say Removed ${playername} from ${[...this.players]}`);
         groupedPlayers.delete(playername);
         this.players.delete(playername);
-        if (this.players.size <= 1 && this.deleted !== true) {
+        if (this.players.size <= 1) {
             // world.getDimension('overworld').runCommand(`say Deleted ${[...this.players]}`);
-            this.deleted = true;
             this.players.forEach(player => {
                 groupedPlayers.delete(player);
             })
@@ -212,6 +209,7 @@ class Group {
         const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
         const outsideRange = hDist <= this.range.h && yDist <= this.range.v && player.dimension.id === this.dimension ? false : true;
         if (outsideRange === true || player.hasTag('linked') === false) {
+            // world.getDimension('overworld').runCommand(`say ${player.name} was outside group range.`);
             this.removePlayer(player.name);
         }
         return outsideRange;
@@ -244,7 +242,7 @@ class Group {
             const yDist = Math.abs(y - this.center.y);
             const zDist = Math.abs(z - this.center.z);
             const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
-            const outsideRange = hDist <= this.range.h && yDist <= this.range.v ? false : true;
+            const outsideRange = hDist <= this.range.h / 2 && yDist <= this.range.v / 2 ? false : true;
             if (outsideRange === false) {
                 this.center = new Location(x, y, z);
             }
@@ -254,8 +252,8 @@ class Group {
         }
     }
     getRange() {
-        this.range.h = (variables.get("horizontal-range") / 2) + (this.players.size - 1) * variables.get("player-addition")
-        this.range.v = (variables.get("vertical-range") + (this.players.size - 1) * variables.get("player-addition") / 2) / 2;
+        this.range.h = variables.get("horizontal-range") + (this.players.size - 2) * variables.get("player-addition");
+        this.range.v = variables.get("vertical-range") + (this.players.size - 2) * variables.get("player-addition");
     }
     update() {
         this.getRange();

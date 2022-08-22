@@ -1,4 +1,4 @@
-import { BeforeChatEvent, world } from "mojang-minecraft";
+import { BeforeChatEvent } from "mojang-minecraft";
 import { variables } from "mojang-minecraft-server-admin";
 import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
 import { messages } from "./messages";
