@@ -117,13 +117,13 @@ class Group {
             if (i === 0) {
                 this.dimension = player.dimension.id;
             };
-            x+=player.location.x;
-            y+=player.location.y;
-            z+=player.location.z;
+            x += player.location.x;
+            y += player.location.y;
+            z += player.location.z;
         })
-        this.center = new Location(x/2, y/2, z/2);
+        this.center = new Location(x / 2, y / 2, z / 2);
         this.id = Math.round(Math.random() * 99999999).toString().padStart(8, '0');
-        this.getRange();        
+        this.getRange();
 
         world.getDimension('overworld').runCommand(`say Group Created: ${[...this.players]}`);
         const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
@@ -186,8 +186,8 @@ class Group {
             });
             groups.delete(this);
         } else {
-            this.getCenter();
             this.getRange();
+            this.getCenter();
             // world.getDimension('overworld').runCommand(`say Center ${[...this.players]} is now (${this.center.x}, ${this.center.y}, ${this.center.z})`);
 
             const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
@@ -256,7 +256,7 @@ class Group {
         }
     }
     getRange() {
-        const addition = (this.players.size - 2) * variables.get("player-addition");
+        const addition = (this.players.size - 1) * variables.get("player-addition");
         this.range.h = variables.get("horizontal-range") / 2 + addition;
         this.range.v = variables.get("vertical-range") / 2 + addition;
         world.getDimension('overworld').runCommand(`say New Range h: ${this.range.h}, v: ${this.range.v}`);
