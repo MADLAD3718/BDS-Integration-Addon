@@ -23,16 +23,12 @@ world.events.worldInitialize.subscribe(() => {
         world.events.beforeChat.subscribe(event => commands(event, validUUID));
 
         if (validUUID === false) {
-            try {
-                world.getDimension('overworld').runCommand(`tellraw @a {"rawtext":[{"text":"${messages.invalidUUID}"}]}`);                
-            } catch {}
+            world.getDimension('overworld').runCommandAsync(`tellraw @a {"rawtext":[{"text":"${messages.invalidUUID}"}]}`);
             return;
         }
 
-        try {
-            world.getDimension('overworld').runCommand(`tellraw @a {"rawtext":[{"text":"${messages.validUUID}"}]}`);
-            world.getDimension('overworld').runCommand(`tag @a remove grouped`);
-        } catch {}
+        world.getDimension('overworld').runCommandAsync(`tellraw @a {"rawtext":[{"text":"${messages.validUUID}"}]}`);
+        world.getDimension('overworld').runCommandAsync(`tag @a remove grouped`);
 
 
         if (variables.get("enable-chat") === true) {
