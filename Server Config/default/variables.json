@@ -1,16 +1,24 @@
 {
+    //---------Server UUID----------//
     // UUID used to differenciate your server from others when linking to BDS Integrator Bot
     // You will need this UUID to connect your server with discord
     // If you haven't set one yet or need a new one you can generate it using https://www.uuidgenerator.net/ (use V4)
     // Make sure you do not share this uuid with anyone once you've set it.
     "server-uuid": "2b6d0635-9eff-4d6e-94ae-e77f41b4a648",
-    // Integration Components
+
+    //-----------Modules------------//
+    // Enable chat integration
     "enable-chat": true,
+    // Enable proximity voice chat
     "enable-voice": true,
-    // Proximity Voice Chat Params
-    "horizontal-range": 15,
-    "vertical-range": 10,
+
+    //-----Proximity Voice Chat-----//
+    // The horizontal range of each voice group
+    "horizontal-range": 64,
+    // The vertical range of each voice group
+    "vertical-range": 32,
     // How many blocks to add to the range of each voice group per extra player
     "player-addition": 10
+
     // You will need to restart your server for any changes to this file to apply.
 }

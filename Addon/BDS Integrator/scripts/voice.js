@@ -106,23 +106,26 @@ class Group {
         h: variables.get("horzontal-range"),
         v: variables.get("vertical-range")
     }
-    center = new Location(0, 0, 0);
     dimension = '';
     players = new Set();
     constructor(playerArray) {
+        let x = 0;
+        let y = 0;
+        let z = 0;
         playerArray.forEach((player, i) => {
             this.players.add(player.name);
             if (i === 0) {
                 this.dimension = player.dimension.id;
-                this.center.x = player.location.x;
-                this.center.y = player.location.y;
-                this.center.z = player.location.z;
             };
+            x+=player.location.x;
+            y+=player.location.y;
+            z+=player.location.z;
         })
+        this.center = new Location(x/2, y/2, z/2);
         this.id = Math.round(Math.random() * 99999999).toString().padStart(8, '0');
-        this.update();
+        this.getRange();        
 
-        // world.getDimension('overworld').runCommand(`say Group Created: ${[...this.players]}`);
+        world.getDimension('overworld').runCommand(`say Group Created: ${[...this.players]}`);
         const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "voice-group-create")
@@ -143,6 +146,7 @@ class Group {
         groupedPlayers.add(playername);
         this.players.add(playername);
         this.getCenter();
+        this.getRange();
         const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "voice-group-add")
@@ -159,11 +163,11 @@ class Group {
         });
     }
     removePlayer(playername) {
-        // world.getDimension('overworld').runCommand(`say Removed ${playername} from ${[...this.players]}`);
+        world.getDimension('overworld').runCommand(`say Removed ${playername} from ${[...this.players]}`);
         groupedPlayers.delete(playername);
         this.players.delete(playername);
         if (this.players.size <= 1) {
-            // world.getDimension('overworld').runCommand(`say Deleted ${[...this.players]}`);
+            world.getDimension('overworld').runCommand(`say Deleted ${[...this.players]}`);
             this.players.forEach(player => {
                 groupedPlayers.delete(player);
             })
@@ -183,6 +187,7 @@ class Group {
             groups.delete(this);
         } else {
             this.getCenter();
+            this.getRange();
             // world.getDimension('overworld').runCommand(`say Center ${[...this.players]} is now (${this.center.x}, ${this.center.y}, ${this.center.z})`);
 
             const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
@@ -209,10 +214,9 @@ class Group {
         const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
         const outsideRange = hDist <= this.range.h && yDist <= this.range.v && player.dimension.id === this.dimension ? false : true;
         if (outsideRange === true || player.hasTag('linked') === false) {
-            // world.getDimension('overworld').runCommand(`say ${player.name} was outside group range.`);
+            world.getDimension('overworld').runCommand(`say ${player.name} was outside group range (hDist: ${hDist}).`);
             this.removePlayer(player.name);
         }
-        return outsideRange;
     }
     getCenter() {
         let x = 0;
@@ -252,11 +256,12 @@ class Group {
         }
     }
     getRange() {
-        this.range.h = variables.get("horizontal-range") + (this.players.size - 2) * variables.get("player-addition");
-        this.range.v = variables.get("vertical-range") + (this.players.size - 2) * variables.get("player-addition");
+        const addition = (this.players.size - 2) * variables.get("player-addition");
+        this.range.h = variables.get("horizontal-range") / 2 + addition;
+        this.range.v = variables.get("vertical-range") / 2 + addition;
+        world.getDimension('overworld').runCommand(`say New Range h: ${this.range.h}, v: ${this.range.v}`);
     }
     update() {
-        this.getRange();
         this.getCenter();
         this.players.forEach(playerName => {
             const query = {
