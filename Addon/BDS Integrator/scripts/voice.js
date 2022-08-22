@@ -1,4 +1,4 @@
-import { world, Location, EntityQueryOptions } from "mojang-minecraft";
+import { world, Location } from "mojang-minecraft";
 import { variables } from "mojang-minecraft-server-admin";
 import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
 
@@ -13,8 +13,9 @@ export function voice() {
         })
 
         // Ungrouped Players:
-        const query = new EntityQueryOptions();
-        query.tags = [`linked`];
+        const query = {
+            'tags': [`linked`]
+        };
         // For all players that have linked their accounts and aren't in a group
         for (const player of world.getPlayers(query)) {
             if (groupedPlayers.has(player.name)) continue;
@@ -214,8 +215,9 @@ class Group {
         let z = 0;
         let modifier = 0;
         this.players.forEach(playerName => {
-            const query = new EntityQueryOptions();
-            query.name = playerName;
+            const query = {
+                'name': playerName
+            };
             for (const player of world.getPlayers(query)) {
                 if (player.location !== undefined && (player.location.x !== 0 && player.location.y !== 0 && player.location.z !== 0)) {
                     x += player.location.x;
@@ -244,8 +246,9 @@ class Group {
         this.getCenter();
         this.getRange();
         this.players.forEach(playerName => {
-            const query = new EntityQueryOptions();
-            query.name = playerName;
+            const query = {
+                'name': playerName
+            };
             for (const player of world.getPlayers(query)) {
                 this.outOfBounds(player);
             }
