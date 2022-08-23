@@ -5,17 +5,31 @@ import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
 const groups = new Set();
 const groupedPlayers = new Set();
 
+/**
+ * Calculate 3D distance
+ * @typedef {{x: number, y: number, z: number}} XYZcoordinates
+ * @param {XYZcoordinates} x 
+ * @param {XYZcoordinates} y 
+ */
+function CalculateDistance (x, y) {
+    const xDist = Math.abs(x.x - y.x);
+    const yDist = Math.abs(x.y - y.y);
+    const zDist = Math.abs(x.z - y.z);
+    const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
+
+    return { xDist, yDist, zDist, hDist };
+};
+
 export function voice() {
     world.events.tick.subscribe(() => {
         // Update Groups:
-        groups.forEach(group => {
-            group.update();
-        })
+        groups.forEach(group => group.update())
 
         // Ungrouped Players:
         const query = {
             'tags': [`linked`]
         };
+        
         // For all players that have linked their accounts and aren't in a group
         for (const player of world.getPlayers(query)) {
             if (groupedPlayers.has(player.name) === true) continue;
@@ -23,11 +37,8 @@ export function voice() {
             // For the other player that isn't in a group
             for (const otherPlayer of world.getPlayers(query)) {
                 if (groupedPlayers.has(otherPlayer.name) === true) continue;
-                const xDist = Math.abs(otherPlayer.location.x - player.location.x);
-                const yDist = Math.abs(otherPlayer.location.y - player.location.y);
-                const zDist = Math.abs(otherPlayer.location.z - player.location.z);
+                const { xDist, yDist, zDist, hDist } = CalculateDistance(otherPlayer.location, player.location);
 
-                const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
                 const inRange = hDist <= variables.get("horizontal-range") && yDist <= variables.get("vertical-range") && player.dimension.id === otherPlayer.dimension.id ? true : false;
 
                 if (inRange === true) {
@@ -40,27 +51,21 @@ export function voice() {
             }
             if (groupedPlayers.has(player.name) === true) continue;
             // If no other players that were groupless were found, look for groups to join instead
-            groups.forEach(group => {
-                const xDist = Math.abs(group.center.x - player.location.x);
-                const yDist = Math.abs(group.center.y - player.location.y);
-                const zDist = Math.abs(group.center.z - player.location.z);
+            for (let group of groups) {
+                const { xDist, yDist, zDist, hDist } = CalculateDistance(group.center, player.location);
 
-                const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
                 const inRange = hDist <= group.range.h && yDist <= group.range.v && player.dimension.id === group.dimension ? true : false;
-                if (inRange === true) {
-                    group.addPlayer(player.name);
-                }
-            })
+                
+                if (inRange === true) group.addPlayer(player.name);
+            }
         }
 
         // Group Merging
         groups.forEach(group => {
             groups.forEach(otherGroup => {
                 if (otherGroup.id === group.id) return;
-                const xDist = Math.abs(otherGroup.center.x - group.center.x);
-                const yDist = Math.abs(otherGroup.center.y - group.center.y);
-                const zDist = Math.abs(otherGroup.center.z - group.center.z);
-                const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
+                const { xDist, yDist, zDist, hDist } = CalculateDistance(otherGroup.center, group.center);
+
                 if ((hDist <= (group.range.h + otherGroup.range.h) / 1.5) && (yDist <= (group.range.v + otherGroup.range.v) / 1.5)) {
                     // world.getDimension('overworld').runCommand(`say Group ${[...group.players]} is in range of ${[...otherGroup.players]}`);
                     otherGroup.players.forEach(playerName => {
@@ -208,10 +213,8 @@ class Group {
         }
     }
     outOfBounds(player) {
-        const xDist = Math.abs(player.location.x - this.center.x);
-        const yDist = Math.abs(player.location.y - this.center.y);
-        const zDist = Math.abs(player.location.z - this.center.z);
-        const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
+        const { xDist, yDist, zDist, hDist } = CalculateDistance(player.location, this.center);
+
         const outsideRange = hDist <= this.range.h && yDist <= this.range.v && player.dimension.id === this.dimension ? false : true;
         if (outsideRange === true || player.hasTag('linked') === false) {
             // world.getDimension('overworld').runCommand(`say ${player.name} was outside group range (hDist: ${hDist}).`);
@@ -242,10 +245,7 @@ class Group {
         y /= (this.players.size - modifier);
         z /= (this.players.size - modifier);
         try {
-            const xDist = Math.abs(x - this.center.x);
-            const yDist = Math.abs(y - this.center.y);
-            const zDist = Math.abs(z - this.center.z);
-            const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
+            const { xDist, yDist, zDist, hDist } = CalculateDistance({ x, y, z }, this.center);
             const outsideRange = hDist <= this.range.h / 2 && yDist <= this.range.v / 2 ? false : true;
             if (outsideRange === false) {
                 this.center = new Location(x, y, z);
