@@ -62,7 +62,7 @@ export function voice() {
                 const zDist = Math.abs(otherGroup.center.z - group.center.z);
                 const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
                 if ((hDist <= (group.range.h + otherGroup.range.h) / 1.5) && (yDist <= (group.range.v + otherGroup.range.v) / 1.5)) {
-                    world.getDimension('overworld').runCommand(`say Group ${[...group.players]} is in range of ${[...otherGroup.players]}`);
+                    // world.getDimension('overworld').runCommand(`say Group ${[...group.players]} is in range of ${[...otherGroup.players]}`);
                     otherGroup.players.forEach(playerName => {
                         group.players.add(playerName);
                     })
@@ -125,7 +125,7 @@ class Group {
         this.id = Math.round(Math.random() * 99999999).toString().padStart(8, '0');
         this.getRange();
 
-        world.getDimension('overworld').runCommand(`say Group Created: ${[...this.players]}`);
+        // world.getDimension('overworld').runCommand(`say Group Created: ${[...this.players]}`);
         const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "voice-group-create")
@@ -142,7 +142,7 @@ class Group {
         });
     }
     addPlayer(playername) {
-        world.getDimension('overworld').runCommand(`say Added ${playername} to ${[...this.players]}`);
+        // world.getDimension('overworld').runCommand(`say Added ${playername} to ${[...this.players]}`);
         groupedPlayers.add(playername);
         this.players.add(playername);
         this.getCenter();
@@ -163,11 +163,11 @@ class Group {
         });
     }
     removePlayer(playername) {
-        world.getDimension('overworld').runCommand(`say Removed ${playername} from ${[...this.players]}`);
+        // world.getDimension('overworld').runCommand(`say Removed ${playername} from ${[...this.players]}`);
         groupedPlayers.delete(playername);
         this.players.delete(playername);
         if (this.players.size <= 1) {
-            world.getDimension('overworld').runCommand(`say Deleted ${[...this.players]}`);
+            // world.getDimension('overworld').runCommand(`say Deleted ${[...this.players]}`);
             this.players.forEach(player => {
                 groupedPlayers.delete(player);
             })
@@ -214,7 +214,7 @@ class Group {
         const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
         const outsideRange = hDist <= this.range.h && yDist <= this.range.v && player.dimension.id === this.dimension ? false : true;
         if (outsideRange === true || player.hasTag('linked') === false) {
-            world.getDimension('overworld').runCommand(`say ${player.name} was outside group range (hDist: ${hDist}).`);
+            // world.getDimension('overworld').runCommand(`say ${player.name} was outside group range (hDist: ${hDist}).`);
             this.removePlayer(player.name);
         }
     }
@@ -259,7 +259,7 @@ class Group {
         const addition = (this.players.size - 1) * variables.get("player-addition");
         this.range.h = variables.get("horizontal-range") / 2 + addition;
         this.range.v = variables.get("vertical-range") / 2 + addition;
-        world.getDimension('overworld').runCommand(`say New Range h: ${this.range.h}, v: ${this.range.v}`);
+        // world.getDimension('overworld').runCommand(`say New Range h: ${this.range.h}, v: ${this.range.v}`);
     }
     update() {
         this.getCenter();
