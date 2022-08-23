@@ -8,14 +8,16 @@ import { messages } from "./messages";
  * @param {BeforeChatEvent} event
  */
 export function commands(event, validUUID) {
-    if (event.message.startsWith("!bds") === false) return
+    // change all characters to lower case so it's not case sensitive
+    if (event.message.toLowerCase().startsWith("!bds") === false) return;
     event.cancel = true;
     const sender = event.sender;
     if (validUUID === false) {
         sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.invalidUUID}"}]}`);
         return;
     }
-    const command = event.message.slice(4).trim();
+    // change all characters to lower case so it's not case sensitive
+    const command = event.message.slice(4).trim().toLowerCase();
     switch (command) {
         case `link`:
             const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
