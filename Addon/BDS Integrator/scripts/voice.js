@@ -1,6 +1,6 @@
 import { world, Location } from "mojang-minecraft";
 import { variables } from "mojang-minecraft-server-admin";
-import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
+import { DBRequests } from "./requests";
 
 const groups = new Set();
 const groupedPlayers = new Set();
@@ -11,25 +11,22 @@ const groupedPlayers = new Set();
  * @param {XYZcoordinates} x 
  * @param {XYZcoordinates} y 
  */
-function CalculateDistance (x, y) {
+function CalculateDistance(x, y) {
     const xDist = Math.abs(x.x - y.x);
     const yDist = Math.abs(x.y - y.y);
     const zDist = Math.abs(x.z - y.z);
     const hDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(zDist, 2));
-
     return { xDist, yDist, zDist, hDist };
 };
 
 export function voice() {
     world.events.tick.subscribe(() => {
         // Update Groups:
-        groups.forEach(group => group.update())
-
+        groups.forEach(group => group.update());
         // Ungrouped Players:
         const query = {
             'tags': [`linked`]
         };
-        
         // For all players that have linked their accounts and aren't in a group
         for (const player of world.getPlayers(query)) {
             if (groupedPlayers.has(player.name) === true) continue;
@@ -38,9 +35,7 @@ export function voice() {
             for (const otherPlayer of world.getPlayers(query)) {
                 if (groupedPlayers.has(otherPlayer.name) === true) continue;
                 const { xDist, yDist, zDist, hDist } = CalculateDistance(otherPlayer.location, player.location);
-
                 const inRange = hDist <= variables.get("horizontal-range") && yDist <= variables.get("vertical-range") && player.dimension.id === otherPlayer.dimension.id ? true : false;
-
                 if (inRange === true) {
                     groupedPlayers.add(player.name)
                     groupedPlayers.add(otherPlayer.name);
@@ -53,45 +48,24 @@ export function voice() {
             // If no other players that were groupless were found, look for groups to join instead
             for (let group of groups) {
                 const { xDist, yDist, zDist, hDist } = CalculateDistance(group.center, player.location);
-
                 const inRange = hDist <= group.range.h && yDist <= group.range.v && player.dimension.id === group.dimension ? true : false;
-                
                 if (inRange === true) group.addPlayer(player.name);
             }
         }
 
-        // Group Merging
+        // Group Merging:
         groups.forEach(group => {
             groups.forEach(otherGroup => {
                 if (otherGroup.id === group.id) return;
                 const { xDist, yDist, zDist, hDist } = CalculateDistance(otherGroup.center, group.center);
 
-                if ((hDist <= (group.range.h + otherGroup.range.h) / 1.5) && (yDist <= (group.range.v + otherGroup.range.v) / 1.5)) {
-                    // world.getDimension('overworld').runCommand(`say Group ${[...group.players]} is in range of ${[...otherGroup.players]}`);
+                if ((hDist <= (group.range.h + otherGroup.range.h) / 2) && (yDist <= (group.range.v + otherGroup.range.v) / 2)) {
                     otherGroup.players.forEach(playerName => {
                         group.players.add(playerName);
                     })
                     group.getCenter();
-
-                    // Group merge request
-                    const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
-                    request.addHeader("Content-Type", "application/json")
-                    request.addHeader("mc-data-type", "voice-group-merge")
-                    request.addHeader("server-uuid", variables.get('server-uuid'))
-                    request.body = JSON.stringify({
-                        merged: group.id,
-                        deleted: otherGroup.id
-                    })
-                    request.method = HttpRequestMethod.POST;
-                    http.request(request).then(response => {
-                        const restring = response.body;
-                        // world.getDimension('overworld').runCommand(`say Groups Response: ${response.body}`);
-                    });
-
+                    DBRequests.Merge(group.id, otherGroup.id);
                     groups.delete(otherGroup);
-                    groups.forEach(group => {
-                        // world.getDimension('overworld').runCommand(`say The merged group is ${[...group.players]}`);
-                    })
                     return;
                 }
             })
@@ -100,7 +74,6 @@ export function voice() {
     world.events.playerLeave.subscribe(event => {
         groupedPlayers.delete(event.playerName);
         groups.forEach(group => {
-            // world.getDimension('overworld').runCommand(`say Removing ${event.playerName} from ${[...group.players]}`);
             group.removePlayer(event.playerName);
         })
     })
@@ -121,7 +94,7 @@ class Group {
             this.players.add(player.name);
             if (i === 0) {
                 this.dimension = player.dimension.id;
-            };
+            }
             x += player.location.x;
             y += player.location.y;
             z += player.location.z;
@@ -129,92 +102,32 @@ class Group {
         this.center = new Location(x / 2, y / 2, z / 2);
         this.id = Math.round(Math.random() * 99999999).toString().padStart(8, '0');
         this.getRange();
-
-        // world.getDimension('overworld').runCommand(`say Group Created: ${[...this.players]}`);
-        const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
-        request.addHeader("Content-Type", "application/json")
-        request.addHeader("mc-data-type", "voice-group-create")
-        request.addHeader("server-uuid", variables.get('server-uuid'))
-        request.body = JSON.stringify({
-            group: this.id,
-            members: [...this.players]
-        })
-        request.method = HttpRequestMethod.POST;
-
-        http.request(request).then(response => {
-            const restring = response.body;
-            // world.getDimension('overworld').runCommand(`say Create Group Response: ${response.body}`);
-        });
+        DBRequests.Create(this.id, [...this.players]);
     }
     addPlayer(playername) {
-        // world.getDimension('overworld').runCommand(`say Added ${playername} to ${[...this.players]}`);
         groupedPlayers.add(playername);
         this.players.add(playername);
         this.getCenter();
         this.getRange();
-        const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
-        request.addHeader("Content-Type", "application/json")
-        request.addHeader("mc-data-type", "voice-group-add")
-        request.addHeader("server-uuid", variables.get('server-uuid'))
-        request.body = JSON.stringify({
-            group: this.id,
-            newMember: playername
-        })
-        request.method = HttpRequestMethod.POST;
-
-        http.request(request).then(response => {
-            const restring = response.body;
-            // world.getDimension('overworld').runCommand(`say Add Player Response: ${response.body}`);
-        });
+        DBRequests.Add(this.id, playername);
     }
     removePlayer(playername) {
-        // world.getDimension('overworld').runCommand(`say Removed ${playername} from ${[...this.players]}`);
         groupedPlayers.delete(playername);
         this.players.delete(playername);
         if (this.players.size <= 1) {
-            // world.getDimension('overworld').runCommand(`say Deleted ${[...this.players]}`);
             this.players.forEach(player => {
                 groupedPlayers.delete(player);
             })
-            const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
-            request.addHeader("Content-Type", "application/json")
-            request.addHeader("mc-data-type", "voice-group-disband")
-            request.addHeader("server-uuid", variables.get('server-uuid'))
-            request.body = JSON.stringify({
-                group: this.id
-            })
-            request.method = HttpRequestMethod.POST;
-
-            http.request(request).then(response => {
-                const restring = response.body;
-                // world.getDimension('overworld').runCommand(`say Disband Group Response: ${response.body}`);
-            });
+            DBRequests.Disband(this.id);
             groups.delete(this);
         } else {
             this.getRange();
             this.getCenter();
-            // world.getDimension('overworld').runCommand(`say Center ${[...this.players]} is now (${this.center.x}, ${this.center.y}, ${this.center.z})`);
-
-            const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
-            request.addHeader("Content-Type", "application/json")
-            request.addHeader("mc-data-type", "voice-group-remove")
-            request.addHeader("server-uuid", variables.get('server-uuid'))
-            request.body = JSON.stringify({
-                group: this.id,
-                members: [...this.players],
-                removedMember: playername
-            })
-            request.method = HttpRequestMethod.POST;
-
-            http.request(request).then(response => {
-                const restring = response.body;
-                // world.getDimension('overworld').runCommand(`say Remove Player Response: ${response.body}`);
-            });
+            DBRequests.Remove(this.id, playername);
         }
     }
     outOfBounds(player) {
         const { xDist, yDist, zDist, hDist } = CalculateDistance(player.location, this.center);
-
         const outsideRange = hDist <= this.range.h && yDist <= this.range.v && player.dimension.id === this.dimension ? false : true;
         if (outsideRange === true || player.hasTag('linked') === false) {
             // world.getDimension('overworld').runCommand(`say ${player.name} was outside group range (hDist: ${hDist}).`);
@@ -236,7 +149,6 @@ class Group {
                     y += player.location.y;
                     z += player.location.z;
                 } else {
-                    // world.getDimension('overworld').runCommand(`say found undefined player`);
                     modifier++;
                 }
             }
@@ -250,16 +162,12 @@ class Group {
             if (outsideRange === false) {
                 this.center = new Location(x, y, z);
             }
-            // world.getDimension('overworld').runCommand(`say New Center: ${x}, ${y} ${z}`);
-        } catch (error) {
-            // world.getDimension('overworld').runCommand(`say Center Error: ${error}${error.stack}`);
-        }
+        } catch {}
     }
     getRange() {
         const addition = (this.players.size - 1) * variables.get("player-addition");
         this.range.h = variables.get("horizontal-range") / 2 + addition;
         this.range.v = variables.get("vertical-range") / 2 + addition;
-        // world.getDimension('overworld').runCommand(`say New Range h: ${this.range.h}, v: ${this.range.v}`);
     }
     update() {
         this.getCenter();
