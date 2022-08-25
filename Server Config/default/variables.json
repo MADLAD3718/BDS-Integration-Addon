@@ -13,10 +13,8 @@
     "enable-voice": true,
 
     //-----Proximity Voice Chat-----//
-    // The horizontal range of each voice group
-    "horizontal-range": 64,
-    // The vertical range of each voice group
-    "vertical-range": 32,
+    // The initial range of each group
+    "group-range": 64,
     // How many blocks to add to the range of each voice group per extra player
     "player-addition": 10
 

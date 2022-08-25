@@ -22,7 +22,7 @@ export class DBRequests {
     /**
      * Makes a request to the database to create a new group with the given players.
      * @param {GroupId} groupId The ID of the group to create.
-     * @param {string[]} members The Members to add to the group.
+     * @param {string[]} members The members to add to the group.
      */
     static Create(groupId, members) {
         const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);

@@ -2,7 +2,7 @@ import { world } from "mojang-minecraft";
 import { variables } from "mojang-minecraft-server-admin";
 import { chat } from "./chat";
 import { commands } from "./commands";
-import { voice } from "./voice";
+import { setupVoice } from "./voice";
 import { queueCheck } from "./queue";
 import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
 import { messages } from "./messages";
@@ -30,13 +30,12 @@ world.events.worldInitialize.subscribe(() => {
         world.getDimension('overworld').runCommandAsync(`tellraw @a {"rawtext":[{"text":"${messages.validUUID}"}]}`);
         world.getDimension('overworld').runCommandAsync(`tag @a remove grouped`);
 
-
         if (variables.get("enable-chat") === true) {
             world.events.chat.subscribe(chat);
         }
 
         if (variables.get("enable-voice") === true) {
-            voice();
+            setupVoice();
         }
 
         queueCheck(1);
