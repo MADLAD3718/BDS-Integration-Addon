@@ -25,9 +25,7 @@ export function setupVoice() {
         // Update Groups:
         groups.forEach(group => group.update());
         // Ungrouped Players:
-        const query = {
-            'tags': [`linked`]
-        };
+        const query = { 'tags': [`linked`] };
         // For all players that have linked their accounts and aren't in a group
         for (const player of world.getPlayers(query)) {
             if (groupedPlayers.has(player.name) === true) continue;
@@ -73,7 +71,7 @@ export function setupVoice() {
 }
 
 class Group {
-    range = variables.get("group-range");
+    range = this.range = (variables.get("group-range") + variables.get("player-addition")) / 2;
     dimension = '';
     players = new Set();
     constructor(...players) {
@@ -118,57 +116,50 @@ class Group {
             DBRequests.Remove(this.id, playername);
         }
     }
-    outOfBounds(player) {
-        const dist = CalculateDistance(player.location, this.center);
-        const outsideRange = dist <= this.range && player.dimension.id === this.dimension ? false : true;
-        if (outsideRange === true || player.hasTag('linked') === false) {
-            this.removePlayer(player.name);
-        }
+    outOfBoundsCheck() {
+        this.players.forEach(playerName => {
+            const query = { 'name': playerName };
+            for (const player of world.getPlayers(query)) {
+                const dist = CalculateDistance(player.location, this.center);
+                const outsideRange = dist <= this.range && player.dimension.id === this.dimension ? false : true;
+                if (outsideRange === true || player.hasTag('linked') === false) {
+                    this.removePlayer(player.name);
+                    if (this.players.size <= 1) return;
+                }
+            }
+        })
     }
     getCenter() {
         let x = 0;
         let y = 0;
         let z = 0;
-        let modifier = 0;
+        let total = 0;
         this.players.forEach(playerName => {
-            const query = {
-                'name': playerName
-            };
+            const query = { 'name': playerName };
             for (const player of world.getPlayers(query)) {
-                if (player.location !== undefined) {
-                    x += player.location.x;
-                    y += player.location.y;
-                    z += player.location.z;
-                } else {
-                    modifier++;
-                }
+                if (player.location.x === undefined || player.location.y === undefined || player.location.z === undefined) continue;
+                x += player.location.x * 1;
+                y += player.location.y * 1;
+                z += player.location.z * 1;
+                total++;
             }
         })
-        x /= (this.players.size - modifier);
-        y /= (this.players.size - modifier);
-        z /= (this.players.size - modifier);
+        x /= (total);
+        y /= (total);
+        z /= (total);
         try {
             const dist = CalculateDistance({ x, y, z }, this.center);
-            const outsideRange = dist <= this.range / 2 ? false : true;
-            if (outsideRange === false) {
+            if (dist <= this.range / 2) {
                 this.center = new Location(x, y, z);
             }
         } catch { }
     }
     getRange() {
         const addition = (this.players.size - 1) * variables.get("player-addition");
-        this.range = variables.get("group-range") / 2 + addition;
+        this.range = (variables.get("group-range") + addition) / 2;
     }
     update() {
         this.getCenter();
-        this.players.forEach(playerName => {
-            const query = {
-                'name': playerName
-            };
-            for (const player of world.getPlayers(query)) {
-                if (this.players.size <= 1) return;
-                this.outOfBounds(player);
-            }
-        });
+        this.outOfBoundsCheck();
     }
 }
