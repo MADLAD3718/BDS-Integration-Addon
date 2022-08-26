@@ -1,0 +1,17 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "BDS Discord Integrator",
+		"description": "Integrate BDS with Discord!",
+        "uuid": "35be4822-9b39-484a-93b3-84a627956101",
+        "version": [0, 0, 1],
+        "min_engine_version": [1,19,20]
+    },
+    "modules": [
+        {
+            "type": "resources",
+            "uuid": "d2fbb982-8b89-4d9a-bbeb-9bb7aa5b793c",
+            "version": [0, 0, 1]
+        }
+    ]
+}

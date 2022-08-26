@@ -18,7 +18,7 @@
 			"type": "script",
 			"language": "javascript",
 			"uuid": "06b86617-f809-4b45-a475-a3acdd249cb1",
-			"version": [ 0, 0, 1 ],
+			"version": [0, 0, 1],
 			"entry": "scripts/bds_integrator.js"
 		}
 	],
