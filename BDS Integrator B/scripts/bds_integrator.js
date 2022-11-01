@@ -1,14 +1,14 @@
-import { world } from "mojang-minecraft";
-import { variables } from "mojang-minecraft-server-admin";
+import { world } from "@minecraft/server";
+import { variables } from "@minecraft/server-admin";
+import { http, HttpRequest, HttpRequestMethod } from "@minecraft/server-net";
 import { chat } from "./chat";
 import { commands } from "./commands";
 import { setupVoice } from "./voice";
 import { queueCheck } from "./queue";
-import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
 import { messages } from "./messages";
 
 world.events.worldInitialize.subscribe(() => {
-    const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+    const request = new HttpRequest(`http://localhost:8081/api`);
     request.addHeader("Content-Type", "application/json")
     request.addHeader("mc-data-type", "server-init")
     request.addHeader("server-uuid", variables.get('server-uuid'))
@@ -38,6 +38,6 @@ world.events.worldInitialize.subscribe(() => {
             setupVoice();
         }
 
-        queueCheck(1);
+        queueCheck(0.5);
     });
 });

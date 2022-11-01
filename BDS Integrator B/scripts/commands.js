@@ -1,6 +1,6 @@
-import { BeforeChatEvent } from "mojang-minecraft";
-import { variables } from "mojang-minecraft-server-admin";
-import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
+import { BeforeChatEvent } from "@minecraft/server";
+import { variables } from "@minecraft/server-admin";
+import { http, HttpRequest, HttpRequestMethod } from "@minecraft/server-net";
 import { messages } from "./messages";
 
 /**
@@ -20,7 +20,7 @@ export function commands(event, validUUID) {
     const command = event.message.slice(4).trim().toLowerCase();
     switch (command) {
         case `link`:
-            const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+            const request = new HttpRequest(`http://localhost:8081/api`);
             request.addHeader("Content-Type", "application/json")
             request.addHeader("mc-data-type", "account-link")
             request.addHeader("server-uuid", variables.get('server-uuid'))
@@ -35,7 +35,7 @@ export function commands(event, validUUID) {
             });
             break;
         case `unlink`:
-            const unlinkRequest = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+            const unlinkRequest = new HttpRequest(`http://localhost:8081/api`);
             unlinkRequest.addHeader("Content-Type", "application/json")
             unlinkRequest.addHeader("mc-data-type", "account-unlink")
             unlinkRequest.addHeader("server-uuid", variables.get('server-uuid'))

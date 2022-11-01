@@ -1,5 +1,5 @@
-import { world, Location } from "mojang-minecraft";
-import { variables } from "mojang-minecraft-server-admin";
+import { world, Location } from "@minecraft/server";
+import { variables } from "@minecraft/server-admin";
 import { DBRequests } from "./requests";
 
 const groups = new Set();
@@ -13,11 +13,10 @@ const groupedPlayers = new Set();
  * @returns {number} The distance between both points.
  */
 function CalculateDistance(origin, comparison) {
-    const xDist = Math.abs(origin.x - comparison.x);
-    const yDist = Math.abs(origin.y - comparison.y);
-    const zDist = Math.abs(origin.z - comparison.z);
-    const dist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2) + Math.pow(zDist, 2));
-    return dist;
+    const xDist = origin.x - comparison.x;
+    const yDist = origin.y - comparison.y;
+    const zDist = origin.z - comparison.z;
+    return Math.sqrt(xDist*xDist + yDist*yDist + zDist*zDist);
 }
 
 export function setupVoice() {
@@ -28,22 +27,22 @@ export function setupVoice() {
         const query = { 'tags': [`linked`] };
         // For all players that have linked their accounts and aren't in a group
         for (const player of world.getPlayers(query)) {
-            if (groupedPlayers.has(player.name) === true) continue;
-            query.excludeNames = [`${player.name}`];
+            if (groupedPlayers.has(player.name)) continue;
+            query.excludeNames = [player.name];
             // For the other player that isn't in a group
             for (const otherPlayer of world.getPlayers(query)) {
-                if (groupedPlayers.has(otherPlayer.name) === true) continue;
+                if (groupedPlayers.has(otherPlayer.name)) continue;
                 const dist = CalculateDistance(otherPlayer.location, player.location);
-                const inRange = dist <= variables.get("group-range") && player.dimension.id === otherPlayer.dimension.id ? true : false;
-                if (inRange === false) continue;
+                const inRange = dist <= variables.get("group-range") && player.dimension.id === otherPlayer.dimension.id;
+                if (!inRange) continue;
                 groups.add(new Group(player, otherPlayer));
                 return;
             }
             // If no other players that were groupless were found, look for groups to join instead
             for (const group of groups) {
                 const dist = CalculateDistance(group.center, player.location);
-                const inRange = dist <= group.range && player.dimension.id === group.dimension ? true : false;
-                if (inRange === true) group.addPlayer(player.name);
+                const inRange = dist <= group.range && player.dimension.id === group.dimension;
+                if (inRange) group.addPlayer(player.name);
             }
         }
 
@@ -52,11 +51,10 @@ export function setupVoice() {
             groups.forEach(otherGroup => {
                 if (otherGroup.id === group.id) return;
                 const dist = CalculateDistance(otherGroup.center, group.center);
-                if (dist <= (group.range.h + otherGroup.range.h) / 2) {
+                if (dist <= (group.range + otherGroup.range) / 2) {
                     otherGroup.players.forEach(playerName => {
                         group.players.add(playerName);
                     })
-                    group.getCenter();
                     DBRequests.Merge(group.id, otherGroup.id);
                     groups.delete(otherGroup);
                 }
@@ -71,8 +69,6 @@ export function setupVoice() {
 }
 
 class Group {
-    range = this.range = (variables.get("group-range") + variables.get("player-addition")) / 2;
-    dimension = '';
     players = new Set();
     constructor(...players) {
         let x = 0;
@@ -101,7 +97,7 @@ class Group {
         DBRequests.Add(this.id, playername);
     }
     removePlayer(playername) {
-        if (this.players.has(playername) === false) return;
+        if (!this.players.has(playername) || this.players.size <= 1) return;
         groupedPlayers.delete(playername);
         this.players.delete(playername);
         if (this.players.size <= 1) {
@@ -144,9 +140,9 @@ class Group {
                 total++;
             }
         })
-        x /= (total);
-        y /= (total);
-        z /= (total);
+        x /= total;
+        y /= total;
+        z /= total;
         try {
             const dist = CalculateDistance({ x, y, z }, this.center);
             if (dist <= this.range / 2) {
@@ -155,8 +151,8 @@ class Group {
         } catch { }
     }
     getRange() {
-        const addition = (this.players.size - 1) * variables.get("player-addition");
-        this.range = (variables.get("group-range") + addition) / 2;
+        const addition = (this.players.size - 2) * variables.get("player-addition") + variables.get("player-addition") / 2;
+        this.range = variables.get("group-range") / 2 + addition;
     }
     update() {
         this.getCenter();

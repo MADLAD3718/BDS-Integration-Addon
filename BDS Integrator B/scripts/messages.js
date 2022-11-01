@@ -1,4 +1,4 @@
-import { variables } from "mojang-minecraft-server-admin"
+import { variables } from "@minecraft/server-admin"
 
 export const messages = {
     invalidUUID: `UUID §a${variables.get("server-uuid")}§r is not a valid V4 UUID! Be sure to set your server's UUID in §7config/default/variables§r to a valid one!`,

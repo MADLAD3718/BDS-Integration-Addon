@@ -1,12 +1,12 @@
-import { world } from "mojang-minecraft";
-import { variables } from "mojang-minecraft-server-admin";
-import { http, HttpRequest, HttpRequestMethod } from "mojang-net";
+import { world } from "@minecraft/server";
+import { variables } from "@minecraft/server-admin";
+import { http, HttpRequest, HttpRequestMethod } from "@minecraft/server-net";
 
 export function queueCheck(interval) {
     world.events.tick.subscribe(event => {
         // Run this every interval seconds
         if (event.currentTick % (20 * interval) === 0) {
-            const request = new HttpRequest(`https://bdsintegrator.ddns.net/api`);
+            const request = new HttpRequest(`http://localhost:8081/api`);
             request.addHeader("Content-Type", "application/json")
             request.addHeader("mc-data-type", "server-queue")
             request.addHeader("server-uuid", variables.get('server-uuid'))

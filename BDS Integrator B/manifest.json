@@ -24,18 +24,15 @@
 	],
 	"dependencies": [
 		{
-			"description": "mojang-net",
-			"uuid": "777b1798-13a6-401c-9cba-0cf17e31a81b",
+			"module_name": "@minecraft/server-net",
 			"version": "1.0.0-beta"
 		},
 		{
-			"description": "mojang-minecraft",
-			"uuid": "b26a4d4c-afdf-4690-88f8-931846312678",
+			"module_name": "@minecraft/server",
 			"version": "1.0.0-beta"
 		},
 		{
-			"description": "mojang-minecraft-server-admin",
-			"uuid": "53d7f2bf-bf9c-49c4-ad1f-7c803d947920",
+			"module_name": "@minecraft/server-admin",
 			"version": "1.0.0-beta"
 		}
 	]
