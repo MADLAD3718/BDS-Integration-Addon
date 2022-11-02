@@ -6,7 +6,7 @@ export function queueCheck(interval) {
     world.events.tick.subscribe(event => {
         // Run this every interval seconds
         if (event.currentTick % (20 * interval) === 0) {
-            const request = new HttpRequest(`http://localhost:8081/api`);
+            const request = new HttpRequest(variables.get("webserver-address"));
             request.addHeader("Content-Type", "application/json")
             request.addHeader("mc-data-type", "server-queue")
             request.addHeader("server-uuid", variables.get('server-uuid'))

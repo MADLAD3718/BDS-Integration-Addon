@@ -6,6 +6,10 @@
     // Make sure you do not share this uuid with anyone once you've set it.
     "server-uuid": "2b6d0635-9eff-4d6e-94ae-e77f41b4a648",
 
+    //------Webserver Address-------//
+    // Address of your webserver used to communicate with your discord bot
+    "webserver-address": "http://localhost:8081/api",
+
     //-----------Modules------------//
     // Enable chat integration
     "enable-chat": true,
@@ -13,10 +17,10 @@
     "enable-voice": true,
 
     //-----Proximity Voice Chat-----//
-    // The initial range of each group
+    // The spherical radius of each group
     "group-range": 64,
-    // How many blocks to add to the range of each voice group per extra player
+    // How many blocks to add to the radius of each voice group per extra player
     "player-addition": 10
 
-    // You will need to restart your server for any changes to this file to apply.
+    // You will need to restart your server for any changes to this file to take effect
 }

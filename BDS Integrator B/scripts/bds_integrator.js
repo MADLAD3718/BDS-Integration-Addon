@@ -8,7 +8,7 @@ import { queueCheck } from "./queue";
 import { messages } from "./messages";
 
 world.events.worldInitialize.subscribe(() => {
-    const request = new HttpRequest(`http://localhost:8081/api`);
+    const request = new HttpRequest(variables.get("webserver-address"));
     request.addHeader("Content-Type", "application/json")
     request.addHeader("mc-data-type", "server-init")
     request.addHeader("server-uuid", variables.get('server-uuid'))

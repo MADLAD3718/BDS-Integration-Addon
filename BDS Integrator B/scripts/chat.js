@@ -7,7 +7,7 @@ import { http, HttpRequest, HttpRequestMethod } from "@minecraft/server-net";
  * @param {ChatEvent} event 
  */
 export function chat(event) {
-    const request = new HttpRequest(`http://localhost:8081/api`);
+    const request = new HttpRequest(variables.get("webserver-address"));
     request.addHeader("Content-Type", "application/json")
     request.addHeader("mc-data-type", "chat-message")
     request.addHeader("server-uuid", variables.get('server-uuid'))

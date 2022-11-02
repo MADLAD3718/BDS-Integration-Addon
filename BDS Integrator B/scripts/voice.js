@@ -16,7 +16,7 @@ function CalculateDistance(origin, comparison) {
     const xDist = origin.x - comparison.x;
     const yDist = origin.y - comparison.y;
     const zDist = origin.z - comparison.z;
-    return Math.sqrt(xDist*xDist + yDist*yDist + zDist*zDist);
+    return Math.sqrt(xDist * xDist + yDist * yDist + zDist * zDist);
 }
 
 export function setupVoice() {
@@ -34,7 +34,7 @@ export function setupVoice() {
                 if (groupedPlayers.has(otherPlayer.name)) continue;
                 const dist = CalculateDistance(otherPlayer.location, player.location);
                 const inRange = dist <= variables.get("group-range") && player.dimension.id === otherPlayer.dimension.id;
-                if (!inRange) continue;
+                if (inRange !== true) continue;
                 groups.add(new Group(player, otherPlayer));
                 return;
             }
@@ -97,7 +97,7 @@ class Group {
         DBRequests.Add(this.id, playername);
     }
     removePlayer(playername) {
-        if (!this.players.has(playername) || this.players.size <= 1) return;
+        if (this.players.has(playername) !== true || this.players.size <= 1) return;
         groupedPlayers.delete(playername);
         this.players.delete(playername);
         if (this.players.size <= 1) {
@@ -134,9 +134,9 @@ class Group {
             const query = { 'name': playerName };
             for (const player of world.getPlayers(query)) {
                 if (player.location.x === undefined || player.location.y === undefined || player.location.z === undefined) continue;
-                x += player.location.x * 1;
-                y += player.location.y * 1;
-                z += player.location.z * 1;
+                x += player.location.x;
+                y += player.location.y;
+                z += player.location.z;
                 total++;
             }
         })

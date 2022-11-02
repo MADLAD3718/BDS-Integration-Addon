@@ -20,7 +20,7 @@ export function commands(event, validUUID) {
     const command = event.message.slice(4).trim().toLowerCase();
     switch (command) {
         case `link`:
-            const request = new HttpRequest(`http://localhost:8081/api`);
+            const request = new HttpRequest(variables.get("webserver-address"));
             request.addHeader("Content-Type", "application/json")
             request.addHeader("mc-data-type", "account-link")
             request.addHeader("server-uuid", variables.get('server-uuid'))
@@ -35,7 +35,7 @@ export function commands(event, validUUID) {
             });
             break;
         case `unlink`:
-            const unlinkRequest = new HttpRequest(`http://localhost:8081/api`);
+            const unlinkRequest = new HttpRequest(variables.get("webserver-address"));
             unlinkRequest.addHeader("Content-Type", "application/json")
             unlinkRequest.addHeader("mc-data-type", "account-unlink")
             unlinkRequest.addHeader("server-uuid", variables.get('server-uuid'))

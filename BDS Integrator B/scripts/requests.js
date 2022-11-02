@@ -1,15 +1,17 @@
 import { variables } from "@minecraft/server-admin";
 import { http, HttpRequest, HttpRequestMethod } from "@minecraft/server-net";
 
+/**
+ * Includes template methods for proximity chat based HTTP requests.
+ */
 export class DBRequests {
-    static address = `http://localhost:8081/api`;
     /**
      * Makes a request to the database to merge a group with another.
      * @param {number} mergedGroupId The ID of the group to move players to.
      * @param {number} deletedGroupId The ID of the group to remove players from and delete.
      */
     static Merge(mergedGroupId, deletedGroupId) {
-        const request = new HttpRequest(this.address);
+        const request = new HttpRequest(variables.get("webserver-address"));
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "voice-group-merge")
         request.addHeader("server-uuid", variables.get('server-uuid'))
@@ -26,7 +28,7 @@ export class DBRequests {
      * @param {string[]} members The members to add to the group.
      */
     static Create(groupId, members) {
-        const request = new HttpRequest(this.address);
+        const request = new HttpRequest(variables.get("webserver-address"));
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "voice-group-create")
         request.addHeader("server-uuid", variables.get('server-uuid'))
@@ -44,7 +46,7 @@ export class DBRequests {
      * @param {string} playerName The player to add to the group.
      */
     static Add(groupId, playerName) {
-        const request = new HttpRequest(this.address);
+        const request = new HttpRequest(variables.get("webserver-address"));
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "voice-group-add")
         request.addHeader("server-uuid", variables.get('server-uuid'))
@@ -61,7 +63,7 @@ export class DBRequests {
      * @param {number} groupId The ID of the group to delete.
      */
     static Disband(groupId) {
-        const request = new HttpRequest(this.address);
+        const request = new HttpRequest(variables.get("webserver-address"));
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "voice-group-disband")
         request.addHeader("server-uuid", variables.get('server-uuid'))
@@ -78,7 +80,7 @@ export class DBRequests {
      * @param {string} playerName The player to remove from the group.
      */
     static Remove(groupId, playerName) {
-        const request = new HttpRequest(this.address);
+        const request = new HttpRequest(variables.get("webserver-address"));
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "voice-group-remove")
         request.addHeader("server-uuid", variables.get('server-uuid'))
