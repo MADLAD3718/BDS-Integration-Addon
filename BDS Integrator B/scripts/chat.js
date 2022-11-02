@@ -1,21 +1,10 @@
 import { ChatEvent } from "@minecraft/server";
-import { variables } from "@minecraft/server-admin";
-import { http, HttpRequest, HttpRequestMethod } from "@minecraft/server-net";
+import { DBRequests } from "./requests";
 
 /**
  * Chat event callback. Used in `ChatEventSignal.subscribe`
  * @param {ChatEvent} event 
  */
 export function chat(event) {
-    const request = new HttpRequest(variables.get("webserver-address"));
-    request.addHeader("Content-Type", "application/json")
-    request.addHeader("mc-data-type", "chat-message")
-    request.addHeader("server-uuid", variables.get('server-uuid'))
-    request.body = JSON.stringify({
-        username: event.sender.name,
-        message: event.message
-    })
-    request.method = HttpRequestMethod.POST;
-
-    http.request(request);
+    DBRequests.Message(event.sender.name, event.message);
 }

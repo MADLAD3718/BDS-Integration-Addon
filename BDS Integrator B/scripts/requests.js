@@ -2,13 +2,14 @@ import { variables } from "@minecraft/server-admin";
 import { http, HttpRequest, HttpRequestMethod } from "@minecraft/server-net";
 
 /**
- * Includes template methods for proximity chat based HTTP requests.
+ * Includes template methods for discord integration based HTTP requests.
  */
 export class DBRequests {
     /**
      * Makes a request to the database to merge a group with another.
      * @param {number} mergedGroupId The ID of the group to move players to.
      * @param {number} deletedGroupId The ID of the group to remove players from and delete.
+     * @returns
      */
     static Merge(mergedGroupId, deletedGroupId) {
         const request = new HttpRequest(variables.get("webserver-address"));
@@ -20,12 +21,13 @@ export class DBRequests {
             deleted: deletedGroupId
         })
         request.method = HttpRequestMethod.POST;
-        http.request(request);
+        return http.request(request);
     }
     /**
      * Makes a request to the database to create a new group with the given players.
      * @param {number} groupId The ID of the group to create.
      * @param {string[]} members The members to add to the group.
+     * @returns
      */
     static Create(groupId, members) {
         const request = new HttpRequest(variables.get("webserver-address"));
@@ -38,12 +40,13 @@ export class DBRequests {
         })
         request.method = HttpRequestMethod.POST;
 
-        http.request(request);
+        return http.request(request);
     }
     /**
      * Makes a request to the database to add a player to a group.
      * @param {number} groupId The ID of the group to add the player to.
      * @param {string} playerName The player to add to the group.
+     * @returns
      */
     static Add(groupId, playerName) {
         const request = new HttpRequest(variables.get("webserver-address"));
@@ -56,11 +59,12 @@ export class DBRequests {
         })
         request.method = HttpRequestMethod.POST;
 
-        http.request(request);
+        return http.request(request);
     }
     /**
      * Makes a request to the database to disband a group.
      * @param {number} groupId The ID of the group to delete.
+     * @returns
      */
     static Disband(groupId) {
         const request = new HttpRequest(variables.get("webserver-address"));
@@ -72,12 +76,13 @@ export class DBRequests {
         })
         request.method = HttpRequestMethod.POST;
 
-        http.request(request);
+        return http.request(request);
     }
     /**
      * Makes a request to the database to remove a player from a group.
      * @param {number} groupId The ID of the group to remove the player from.
      * @param {string} playerName The player to remove from the group.
+     * @returns
      */
     static Remove(groupId, playerName) {
         const request = new HttpRequest(variables.get("webserver-address"));
@@ -90,6 +95,59 @@ export class DBRequests {
         })
         request.method = HttpRequestMethod.POST;
 
-        http.request(request);
+        return http.request(request);
+    }
+    /**
+     * Makes a request to the database to display a chat message.
+     * @param {string} author The message author's name.
+     * @param {string} message The chat message contents.
+     * @returns
+     */
+    static Message(author, message) {
+        const request = new HttpRequest(variables.get("webserver-address"));
+        request.addHeader("Content-Type", "application/json")
+        request.addHeader("mc-data-type", "chat-message")
+        request.addHeader("server-uuid", variables.get('server-uuid'))
+        request.body = JSON.stringify({
+            username: author,
+            message: message
+        })
+        request.method = HttpRequestMethod.POST;
+
+        return http.request(request);
+    }
+    /**
+     * Makes a request to the database to announce something to the integrated discord text channel.
+     * @param {string} announcement The announcement message.
+     * @returns
+     */
+    static Announce(announcement) {
+        if (variables.get("enable-chat") === false) throw new Error("Chat integration is not enabled on the server!");
+        const request = new HttpRequest(variables.get("webserver-address"));
+        request.addHeader("Content-Type", "application/json")
+        request.addHeader("mc-data-type", "announcement")
+        request.addHeader("server-uuid", variables.get('server-uuid'))
+        request.body = JSON.stringify({
+            announcement: announcement
+        })
+        request.method = HttpRequestMethod.POST;
+
+        return http.request(request);
+    }
+    /**
+     * Makes a server initialization/reload request to the database.
+     */
+    static Initialize() {
+        const request = new HttpRequest(variables.get("webserver-address"));
+        request.addHeader("Content-Type", "application/json")
+        request.addHeader("mc-data-type", "server-init")
+        request.addHeader("server-uuid", variables.get('server-uuid'))
+        request.body = JSON.stringify({
+            chat: variables.get("enable-chat"),
+            voice: variables.get("enable-voice")
+        })
+        request.method = HttpRequestMethod.POST;
+        
+        return http.request(request)
     }
 }

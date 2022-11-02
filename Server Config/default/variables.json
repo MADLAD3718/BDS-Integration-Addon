@@ -18,6 +18,8 @@
     //-----------Modules------------//
     // Enable chat integration
     "enable-chat": true,
+    // Enable kill announcements. "enable-chat" must be set to true for this to work.
+    "announce-kills": true,
     // Enable proximity voice chat
     "enable-voice": true,
 
