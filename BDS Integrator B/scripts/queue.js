@@ -7,7 +7,7 @@ export function queueCheck(interval) {
         if (event.currentTick % (20 * interval) === 0) {
             DBRequests.getQueue().then(response => {
                 JSON.parse(response.body).forEach(op => {
-                    world.getDimension('overworld').runCommand(op);
+                    world.getDimension('overworld').runCommandAsync(op).catch();
                 })
             });
         }

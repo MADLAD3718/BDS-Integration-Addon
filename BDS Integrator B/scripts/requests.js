@@ -1,3 +1,4 @@
+import { Player } from "@minecraft/server";
 import { variables } from "@minecraft/server-admin";
 import { http, HttpRequest, HttpRequestMethod } from "@minecraft/server-net";
 
@@ -152,6 +153,7 @@ export class DBRequests {
     }
     /**
      * Makes a request to get the server's queue from the database.
+     * @returns
      */
     static getQueue() {
         const request = new HttpRequest(variables.get("webserver-address"));
@@ -161,5 +163,40 @@ export class DBRequests {
         request.method = HttpRequestMethod.GET;
 
         return http.request(request);
+    }
+    /**
+     * Makes a request to the database to link a Minecraft player with a discord account.
+     * @param {Player} player The player linking with a discord account.
+     * @returns
+     */
+    static link(player) {
+        const request = new HttpRequest(variables.get("webserver-address"));
+        request.addHeader("Content-Type", "application/json")
+        request.addHeader("mc-data-type", "account-link")
+        request.addHeader("server-uuid", variables.get('server-uuid'))
+        request.body = JSON.stringify({
+            username: player.name,
+            hasTag: player.hasTag('linked')
+        })
+        request.method = HttpRequestMethod.POST;
+
+        return http.request(request)
+    }
+    /**
+     * Makes a request to the database to unlink a Minecraft player from their discord account.
+     * @param {Player} player The player unlinking from their discord account.
+     * @returns
+     */
+    static unlink(player) {
+        const unlinkRequest = new HttpRequest(variables.get("webserver-address"));
+        unlinkRequest.addHeader("Content-Type", "application/json")
+        unlinkRequest.addHeader("mc-data-type", "account-unlink")
+        unlinkRequest.addHeader("server-uuid", variables.get('server-uuid'))
+        unlinkRequest.body = JSON.stringify({
+            username: player.name
+        })
+        unlinkRequest.method = HttpRequestMethod.POST;
+
+        return http.request(unlinkRequest);
     }
 }

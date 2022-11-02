@@ -1,4 +1,4 @@
-import { EntityHurtEvent, Player, world } from "@minecraft/server";
+import { EntityHurtEvent, Player } from "@minecraft/server";
 import { DBRequests } from "./requests";
 
 /**

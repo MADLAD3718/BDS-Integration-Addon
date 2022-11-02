@@ -1,6 +1,6 @@
 import { BeforeChatEvent } from "@minecraft/server";
 import { variables } from "@minecraft/server-admin";
-import { http, HttpRequest, HttpRequestMethod } from "@minecraft/server-net";
+import { DBRequests } from "./requests";
 import { messages } from "./messages";
 
 /**
@@ -13,44 +13,25 @@ export function commands(event, validUUID) {
     event.cancel = true;
     const sender = event.sender;
     if (validUUID === false) {
-        sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.invalidUUID}"}]}`);
+        sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"${messages.invalidUUID}"}]}`).catch();
         return;
     }
     // change all characters to lower case so it's not case sensitive
     const command = event.message.slice(4).trim().toLowerCase();
     switch (command) {
         case `link`:
-            const request = new HttpRequest(variables.get("webserver-address"));
-            request.addHeader("Content-Type", "application/json")
-            request.addHeader("mc-data-type", "account-link")
-            request.addHeader("server-uuid", variables.get('server-uuid'))
-            request.body = JSON.stringify({
-                username: sender.name,
-                hasTag: sender.hasTag('linked')
-            })
-            request.method = HttpRequestMethod.POST;
-
-            http.request(request).then(response => {
-                sender.runCommand(`tellraw "${sender.name}" {"rawtext":[{"text":"${JSON.parse(response.body)}"}]}`);
+            DBRequests.link(sender).then(response => {
+                sender.runCommandAsync(`tellraw "${sender.name}" {"rawtext":[{"text":"${JSON.parse(response.body)}"}]}`).catch();
             });
             break;
         case `unlink`:
-            const unlinkRequest = new HttpRequest(variables.get("webserver-address"));
-            unlinkRequest.addHeader("Content-Type", "application/json")
-            unlinkRequest.addHeader("mc-data-type", "account-unlink")
-            unlinkRequest.addHeader("server-uuid", variables.get('server-uuid'))
-            unlinkRequest.body = JSON.stringify({
-                username: sender.name
-            })
-            unlinkRequest.method = HttpRequestMethod.POST;
-
-            http.request(unlinkRequest);
+            DBRequests.unlink(sender);
             break;
         case `status`:
-            sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.status(sender)}"}]}`);
+            sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"${messages.status(sender)}"}]}`).catch();
             break;
         default:
-            sender.runCommand(`tellraw @s {"rawtext":[{"text":"${messages.commands}"}]}`);
+            sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"${messages.commands}"}]}`).catch();
             break;
     }
 }
