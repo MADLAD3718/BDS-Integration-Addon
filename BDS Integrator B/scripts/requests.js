@@ -147,7 +147,19 @@ export class DBRequests {
             voice: variables.get("enable-voice")
         })
         request.method = HttpRequestMethod.POST;
-        
+
         return http.request(request)
+    }
+    /**
+     * Makes a request to get the server's queue from the database.
+     */
+    static getQueue() {
+        const request = new HttpRequest(variables.get("webserver-address"));
+        request.addHeader("Content-Type", "application/json")
+        request.addHeader("mc-data-type", "server-queue")
+        request.addHeader("server-uuid", variables.get('server-uuid'))
+        request.method = HttpRequestMethod.GET;
+
+        return http.request(request);
     }
 }
