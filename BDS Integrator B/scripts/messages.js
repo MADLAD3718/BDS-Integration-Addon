@@ -11,5 +11,5 @@ export const messages = {
         message += `\nLink Status: ${linkDisplay}`;
         return message;
     },
-    commands: `List of !bds commands:\n§7!bds link§r\n§8Generates a code to link your Minecraft account with discord.§r\n§7!bds unlink§r\n§8Unlinks your Minecraft account from discord.§r\n§7!bds status§r\n§8Displays the status of your connection with BDS Integration.§r`
+    commands: `List of ${variables.get("command-prefix")} commands:\n§7${variables.get("command-prefix")} link§r\n§8Generates a code to link your Minecraft account with discord.§r\n§7${variables.get("command-prefix")} unlink§r\n§8Unlinks your Minecraft account from discord.§r\n§7${variables.get("command-prefix")} status§r\n§8Displays the status of your connection with BDS Integration.§r`
 }

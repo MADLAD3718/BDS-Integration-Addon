@@ -9,7 +9,7 @@ import { messages } from "./messages";
  */
 export function commands(event, validUUID) {
     // change all characters to lower case so it's not case sensitive
-    if (event.message.toLowerCase().startsWith("!bds") === false) return;
+    if (event.message.toLowerCase().startsWith(variables.get("command-prefix")) === false) return;
     event.cancel = true;
     const sender = event.sender;
     if (validUUID === false) {

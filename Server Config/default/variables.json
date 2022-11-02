@@ -10,6 +10,11 @@
     // Address of your webserver used to communicate with your discord bot
     "webserver-address": "http://localhost:8081/api",
 
+    //-------Command Prefix---------//
+    // Prefix used with custom commands. Must be in lowercase. Placing / as the first character is unsupported.
+    // Example (where '!bds' is the prefix): !bds link
+    "command-prefix": "!bds",
+
     //-----------Modules------------//
     // Enable chat integration
     "enable-chat": true,
