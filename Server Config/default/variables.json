@@ -12,18 +12,20 @@
 
     //-------Command Prefix---------//
     // Prefix used with custom commands. Must be in lowercase. Placing / as the first character is unsupported.
-    // Example (where '!bds' is the prefix): !bds link
+    // Example (where '!bds' is the prefix): !bds status
     "command-prefix": "!bds",
 
-    //-----------Modules------------//
+    //----Text Chat Integration-----//
     // Enable chat integration
     "enable-chat": true,
-    // Enable kill announcements. "enable-chat" must be set to true for this to work.
+    // Enable kill announcements
     "announce-kills": true,
+    // Enable Join/Leave announcements
+    "announce-join-leave": true,
+    
+    //-----Proximity Voice Chat-----//
     // Enable proximity voice chat
     "enable-voice": true,
-
-    //-----Proximity Voice Chat-----//
     // The spherical radius of each group
     "group-range": 64,
     // How many blocks to add to the radius of each voice group per extra player

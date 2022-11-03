@@ -155,7 +155,7 @@ export class DBRequests {
      * Makes a request to get the server's queue from the database.
      * @returns
      */
-    static getQueue() {
+    static GetQueue() {
         const request = new HttpRequest(variables.get("webserver-address"));
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "server-queue")
@@ -169,7 +169,7 @@ export class DBRequests {
      * @param {Player} player The player linking with a discord account.
      * @returns
      */
-    static link(player) {
+    static Link(player) {
         const request = new HttpRequest(variables.get("webserver-address"));
         request.addHeader("Content-Type", "application/json")
         request.addHeader("mc-data-type", "account-link")
@@ -187,7 +187,7 @@ export class DBRequests {
      * @param {Player} player The player unlinking from their discord account.
      * @returns
      */
-    static unlink(player) {
+    static Unlink(player) {
         const unlinkRequest = new HttpRequest(variables.get("webserver-address"));
         unlinkRequest.addHeader("Content-Type", "application/json")
         unlinkRequest.addHeader("mc-data-type", "account-unlink")

@@ -5,7 +5,8 @@ import { messages } from "./messages";
 
 /**
  * BeforeChat event callback. Used in `BeforeChatEventSignal.subscribe`
- * @param {BeforeChatEvent} event
+ * @param {BeforeChatEvent} event 
+ * @param {boolean} validUUID
  */
 export function commands(event, validUUID) {
     // change all characters to lower case so it's not case sensitive
@@ -20,18 +21,17 @@ export function commands(event, validUUID) {
     const command = event.message.slice(4).trim().toLowerCase();
     switch (command) {
         case `link`:
-            DBRequests.link(sender).then(response => {
+            DBRequests.Link(sender).then(response => {
                 sender.runCommandAsync(`tellraw "${sender.name}" {"rawtext":[{"text":"${JSON.parse(response.body)}"}]}`).catch();
             });
             break;
         case `unlink`:
-            DBRequests.unlink(sender);
+            DBRequests.Unlink(sender);
             break;
         case `status`:
             sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"${messages.status(sender)}"}]}`).catch();
             break;
         default:
             sender.runCommandAsync(`tellraw @s {"rawtext":[{"text":"${messages.commands}"}]}`).catch();
-            break;
     }
 }
