@@ -18,8 +18,8 @@
     //----Text Chat Integration-----//
     // Enable chat integration
     "enable-chat": true,
-    // Enable kill announcements
-    "announce-kills": true,
+    // Enable death announcements
+    "announce-deaths": true,
     // Enable Join/Leave announcements
     "announce-join-leave": true,
     
