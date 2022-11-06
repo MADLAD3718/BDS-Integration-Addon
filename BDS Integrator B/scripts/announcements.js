@@ -1,4 +1,4 @@
-import { EntityHurtEvent, Player, PlayerJoinEvent, PlayerLeaveEvent } from "@minecraft/server";
+import { EntityHurtEvent, Player, PlayerJoinEvent, PlayerLeaveEvent, world } from "@minecraft/server";
 import { DBRequests } from "./requests";
 
 /**
@@ -134,4 +134,12 @@ export function announceJoins(event) {
  */
 export function announceLeaves(event) {
     DBRequests.Announce(`${event.playerName} left the game`);
+}
+
+/**
+ * Announces the amount of days passed in the world
+ */
+export function announceDays() {
+    if (world.getTime() !== 0) return;
+    DBRequests.Announce(`Day ${Math.floor(world.getAbsoluteTime() / 24000)}`);
 }

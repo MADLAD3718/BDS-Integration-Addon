@@ -1,7 +1,7 @@
 import { world } from "@minecraft/server";
 import { variables } from "@minecraft/server-admin";
 import { DBRequests } from "./requests";
-import { announceJoins, announceDeaths, announceLeaves } from "./announcements";
+import { announceJoins, announceDeaths, announceLeaves, announceDays } from "./announcements";
 import { chat } from "./chat";
 import { commands } from "./commands";
 import { setupVoice } from "./voice";
@@ -23,6 +23,9 @@ world.events.worldInitialize.subscribe(() => DBRequests.Initialize().then(respon
         if (variables.get("announce-join-leave") === true) {
             world.events.playerJoin.subscribe(announceJoins);
             world.events.playerLeave.subscribe(announceLeaves);
+        }
+        if (variables.get("announce-days") === true) {
+            world.events.tick.subscribe(announceDays)
         }
     }
     if (variables.get("enable-voice") === true) setupVoice();

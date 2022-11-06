@@ -22,6 +22,8 @@
     "announce-deaths": true,
     // Enable Join/Leave announcements
     "announce-join-leave": true,
+    // Enable day count announcements
+    "announce-days": true,
     
     //-----Proximity Voice Chat-----//
     // Enable proximity voice chat
