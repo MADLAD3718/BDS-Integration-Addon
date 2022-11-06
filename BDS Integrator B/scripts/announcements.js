@@ -83,11 +83,12 @@ export function announceDeaths(event) {
             }
             break;
         case "projectile":
-            if (damagerName === "Blaze" && event.damagingEntity instanceof Player === false) message = `${event.hurtEntity.name} was fireballed by Blaze`;
-            else if (damagerName === "Ghast" && event.damagingEntity instanceof Player === false) message = `${event.hurtEntity.name} was slain by Ghast`;
-            else if (damagerName === "Llama" && event.damagingEntity instanceof Player === false) message = `${event.hurtEntity.name} was spitballed by Llama`;
-            else if (damagerName === "Shulker" && event.damagingEntity instanceof Player === false) message = `${event.hurtEntity.name} was sniped by Shulker`;
-            else message = `${event.hurtEntity.name} was shot by ${damagerName}`;
+            let actionType = 'shot';
+            if (event.projectile?.typeId === 'minecraft:small_fireball') actionType = 'fireballed';
+            if (event.projectile?.typeId === 'minecraft:llama_spit') actionType = 'spitballed';
+            if (event.projectile?.typeId === 'minecraft:fireball') actionType = 'slain';
+            if (event.projectile?.typeId === 'minecraft:shulker_bullet') actionType = 'sniped';
+            message = `${event.hurtEntity.name} was ${actionType} by ${damagerName}`;
             if (event.damagingEntity instanceof Player) {
                 const itemNameTag = event.damagingEntity.getComponent("inventory").container.getItem(event.damagingEntity.selectedSlot)?.nameTag;
                 if (itemNameTag !== undefined) message += ` using ${itemNameTag}`;
