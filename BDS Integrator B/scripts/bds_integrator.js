@@ -1,4 +1,3 @@
-import { announceJoins, announceDeaths, announceLeaves, announceDays, announceBossKills, announceWitherKills } from "./announcements";
 import { variables } from "@minecraft/server-admin";
 import { world } from "@minecraft/server";
 import { DBRequests } from "./requests";
@@ -7,6 +6,7 @@ import { messages } from "./messages";
 import { setupVoice } from "./voice";
 import { queueCheck } from "./queue";
 import { chat } from "./chat";
+import { Announcements } from "./announcements";
 
 world.events.worldInitialize.subscribe(() => DBRequests.Initialize().then(response => {
     const validUUID = JSON.parse(response.body);
@@ -19,15 +19,15 @@ world.events.worldInitialize.subscribe(() => DBRequests.Initialize().then(respon
     world.say(messages.validUUID);
     if (variables.get("enable-chat") === true) {
         world.events.chat.subscribe(chat);
-        if (variables.get("announcements").deaths === true) world.events.entityHurt.subscribe(announceDeaths);
-        if (variables.get("announcements").days === true) world.events.tick.subscribe(announceDays);
+        if (variables.get("announcements").deaths === true) world.events.entityHurt.subscribe(Announcements.Deaths);
+        if (variables.get("announcements").days === true) world.events.tick.subscribe(Announcements.Days);
         if (variables.get("announcements").connections === true) {
-            world.events.playerJoin.subscribe(announceJoins);
-            world.events.playerLeave.subscribe(announceLeaves);
+            world.events.playerJoin.subscribe(Announcements.Joins);
+            world.events.playerLeave.subscribe(Announcements.Leaves);
         }
         if (variables.get("announcements").bosses === true) {
-            world.events.entityHurt.subscribe(announceBossKills);
-            world.events.entityHit.subscribe(announceWitherKills);
+            world.events.entityHurt.subscribe(Announcements.BossKills);
+            world.events.entityHit.subscribe(Announcements.WitherKills);
         }
     }
     if (variables.get("voice-chat").enabled === true) setupVoice();

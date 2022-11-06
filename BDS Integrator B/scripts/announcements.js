@@ -4,101 +4,149 @@ import { DBRequests } from "./requests";
 const bossIds = ['minecraft:ender_dragon', 'minecraft:warden'];
 
 /**
- * Announces when a player kills another player.
- * @param {EntityHurtEvent} event Entity hurt event to look for pvp kills in.
+ * Organizes announcement methods
  */
-export function announceDeaths(event) {
-    if (event.hurtEntity instanceof Player === false || event.hurtEntity.getComponent("health").current > 0) return;
-    let damagerName = event.damagingEntity instanceof Player ? event.damagingEntity.name : event.damagingEntity?.nameTag === '' || event.damagingEntity?.nameTag === undefined ? getEntityName(event.damagingEntity?.typeId) : event.damagingEntity?.nameTag;
-    let message = ``;
-    switch (event.cause) {
-        case undefined:
-            message = `${event.hurtEntity.name} was obliterated by a sonically-charged shriek whilst trying to escape Warden`
-            break;
-        case "freezing":
-            message = `${event.hurtEntity.name} froze to death`
-            break;
-        case "void":
-            message = `${event.hurtEntity.name} fell out of the world`
-            break;
-        case "fire":
-            message = `${event.hurtEntity.name} went up in flames`
-            break;
-        case "fall":
-            message = `${event.hurtEntity.name} fell from a high place`
-            break;
-        case "flyIntoWall":
-            message = `${event.hurtEntity.name} experienced kinetic energy`
-            break;
-        case "lightning":
-            message = `${event.hurtEntity.name} was struck by lightning`
-            break;
-        case "fireworks":
-            message = `${event.hurtEntity.name} went off with a bang`
-            break;
-        case "blockExplosion":
-            message = `${event.hurtEntity.name} blew up`
-            break;
-        case "fireTick":
-            message = `${event.hurtEntity.name} burned to death`
-            break;
-        case "magic":
-            message = `${event.hurtEntity.name} was killed by ${damagerName !== '' ? `${damagerName} using ` : ``}magic`
-            break;
-        case "starve":
-            message = `${event.hurtEntity.name} starved to death`
-            break;
-        case "lava":
-            message = `${event.hurtEntity.name} tried to swim in lava`
-            break;
-        case "magma":
-            message = `${event.hurtEntity.name} discovered floor was lava`
-            break;
-        case "drowning":
-            message = `${event.hurtEntity.name} drowned`
-            break;
-        case "suffocation":
-            message = `${event.hurtEntity.name} suffocated in a wall`;
-            break;
-        case "stalactite":
-            message = `${event.hurtEntity.name} was skewered by a falling stalactite`
-            break;
-        case "stalagmite":
-            message = `${event.hurtEntity.name} was impaled on a stalagmite`
-            break;
-        case "anvil":
-            message = `${event.hurtEntity.name} was squashed by a falling anvil`
-            break;
-        case "wither":
-            message = `${event.hurtEntity.name} withered away`
-            break;
-        case "entityExplosion":
-            message = `${event.hurtEntity.name} was blown up by ${damagerName}`;
-            break;
-        case "entityAttack":
-            message = `${event.hurtEntity.name} was slain by ${damagerName}`;
-            if (event.damagingEntity instanceof Player) {
-                const itemNameTag = event.damagingEntity.getComponent("inventory").container.getItem(event.damagingEntity.selectedSlot)?.nameTag;
-                if (itemNameTag !== undefined) message += ` using ${itemNameTag}`;
-            }
-            break;
-        case "projectile":
-            let actionType = 'shot';
-            if (event.projectile?.typeId === 'minecraft:small_fireball') actionType = 'fireballed';
-            if (event.projectile?.typeId === 'minecraft:llama_spit') actionType = 'spitballed';
-            if (event.projectile?.typeId === 'minecraft:fireball') actionType = 'slain';
-            if (event.projectile?.typeId === 'minecraft:shulker_bullet') actionType = 'sniped';
-            message = `${event.hurtEntity.name} was ${actionType} by ${damagerName}`;
-            if (event.damagingEntity instanceof Player) {
-                const itemNameTag = event.damagingEntity.getComponent("inventory").container.getItem(event.damagingEntity.selectedSlot)?.nameTag;
-                if (itemNameTag !== undefined) message += ` using ${itemNameTag}`;
-            }
-            break;
-        default:
-            message = `${event.hurtEntity.name} died`
+export class Announcements {
+    /**
+     * Announces when a player kills another player.
+     * @param {EntityHurtEvent} event Entity hurt event to look for pvp kills in.
+     */
+    static Deaths(event) {
+        if (event.hurtEntity instanceof Player === false || event.hurtEntity.getComponent("health").current > 0) return;
+        let damagerName = event.damagingEntity instanceof Player ? event.damagingEntity.name : event.damagingEntity?.nameTag === '' || event.damagingEntity?.nameTag === undefined ? getEntityName(event.damagingEntity?.typeId) : event.damagingEntity?.nameTag;
+        let message = ``;
+        switch (event.cause) {
+            case undefined:
+                message = `${event.hurtEntity.name} was obliterated by a sonically-charged shriek whilst trying to escape Warden`
+                break;
+            case "freezing":
+                message = `${event.hurtEntity.name} froze to death`
+                break;
+            case "void":
+                message = `${event.hurtEntity.name} fell out of the world`
+                break;
+            case "fire":
+                message = `${event.hurtEntity.name} went up in flames`
+                break;
+            case "fall":
+                message = `${event.hurtEntity.name} fell from a high place`
+                break;
+            case "flyIntoWall":
+                message = `${event.hurtEntity.name} experienced kinetic energy`
+                break;
+            case "lightning":
+                message = `${event.hurtEntity.name} was struck by lightning`
+                break;
+            case "fireworks":
+                message = `${event.hurtEntity.name} went off with a bang`
+                break;
+            case "blockExplosion":
+                message = `${event.hurtEntity.name} blew up`
+                break;
+            case "fireTick":
+                message = `${event.hurtEntity.name} burned to death`
+                break;
+            case "magic":
+                message = `${event.hurtEntity.name} was killed by ${damagerName !== '' ? `${damagerName} using ` : ``}magic`
+                break;
+            case "starve":
+                message = `${event.hurtEntity.name} starved to death`
+                break;
+            case "lava":
+                message = `${event.hurtEntity.name} tried to swim in lava`
+                break;
+            case "magma":
+                message = `${event.hurtEntity.name} discovered floor was lava`
+                break;
+            case "drowning":
+                message = `${event.hurtEntity.name} drowned`
+                break;
+            case "suffocation":
+                message = `${event.hurtEntity.name} suffocated in a wall`;
+                break;
+            case "stalactite":
+                message = `${event.hurtEntity.name} was skewered by a falling stalactite`
+                break;
+            case "stalagmite":
+                message = `${event.hurtEntity.name} was impaled on a stalagmite`
+                break;
+            case "anvil":
+                message = `${event.hurtEntity.name} was squashed by a falling anvil`
+                break;
+            case "wither":
+                message = `${event.hurtEntity.name} withered away`
+                break;
+            case "entityExplosion":
+                message = `${event.hurtEntity.name} was blown up by ${damagerName}`;
+                break;
+            case "entityAttack":
+                message = `${event.hurtEntity.name} was slain by ${damagerName}`;
+                if (event.damagingEntity instanceof Player) {
+                    const itemNameTag = event.damagingEntity.getComponent("inventory").container.getItem(event.damagingEntity.selectedSlot)?.nameTag;
+                    if (itemNameTag !== undefined) message += ` using ${itemNameTag}`;
+                }
+                break;
+            case "projectile":
+                let actionType = 'shot';
+                if (event.projectile?.typeId === 'minecraft:small_fireball') actionType = 'fireballed';
+                if (event.projectile?.typeId === 'minecraft:llama_spit') actionType = 'spitballed';
+                if (event.projectile?.typeId === 'minecraft:fireball') actionType = 'slain';
+                if (event.projectile?.typeId === 'minecraft:shulker_bullet') actionType = 'sniped';
+                message = `${event.hurtEntity.name} was ${actionType} by ${damagerName}`;
+                if (event.damagingEntity instanceof Player) {
+                    const itemNameTag = event.damagingEntity.getComponent("inventory").container.getItem(event.damagingEntity.selectedSlot)?.nameTag;
+                    if (itemNameTag !== undefined) message += ` using ${itemNameTag}`;
+                }
+                break;
+            default:
+                message = `${event.hurtEntity.name} died`
+        }
+        DBRequests.Announce(message);
     }
-    DBRequests.Announce(message);
+    /**
+     * Announces when a player joins the game.
+     * @param {PlayerJoinEvent} event The player join event to announce.
+     */
+    static Joins(event) {
+        DBRequests.Announce(`${event.player.name} joined the game`);
+    }
+    /**
+     * Announces when a player leaves the game.
+     * @param {PlayerLeaveEvent} event The player leave event to announce.
+     */
+    static Leaves(event) {
+        DBRequests.Announce(`${event.playerName} left the game`);
+    }
+    /**
+     * Announces the amount of days passed in the world
+     */
+    static Days() {
+        if (world.getTime() === 1) DBRequests.Announce(`__**Day ${(world.getAbsoluteTime() - 1) / 24000 + 1}**__`);
+    }
+    /**
+     * Announces when a boss is defeated
+     * @param {EntityHurtEvent} event 
+     */
+    static BossKills(event) {
+        if (bossIds.includes(event.hurtEntity?.typeId) === false || event.hurtEntity.getComponent("health").current > 0) return;
+        const damagerName = event.damagingEntity?.name ?? event.damagingEntity?.nameTag ?? getEntityName(event.damagingEntity?.typeId);
+        if (damagerName === undefined) return;
+        const bossName = getEntityName(event.hurtEntity.typeId);
+        DBRequests.Announce(`${damagerName} has killed ${bossName.charAt(0) === 'E' ? `the` : `a`} ${bossName}!`);
+    }
+    /**
+     * Announces when a Wither has been defeated. Must subscribe to `EntityHitEvent` since the final blow is not registered as an `EntityHurtEvent`.
+     * @param {EntityHitEvent} event 
+     */
+    static WitherKills(event) {
+        if (event.hitEntity.typeId !== 'minecraft:wither' || event.hitEntity.hasTag(`dead`) || event.hitEntity.getComponent("health").current > 0) return;
+        const damagerName = event.entity?.name ?? event.entity?.nameTag ?? getEntityName(event.entity?.typeId);
+        if (damagerName === undefined) return;
+        event.hitEntity.addTag(`dead`);
+        DBRequests.Announce(`${damagerName} has killed a Wither!`);
+    }
 }
+
 
 /**
  * Converts a given entity ID into a properly formatted name.
@@ -120,54 +168,4 @@ function getEntityName(entityId) {
             })
             return nameArray.join(' ');
     }
-
-}
-
-/**
- * Announces when a player joins the game.
- * @param {PlayerJoinEvent} event The player join event to announce.
- */
-export function announceJoins(event) {
-    DBRequests.Announce(`${event.player.name} joined the game`);
-}
-
-/**
- * Announces when a player leaves the game.
- * @param {PlayerLeaveEvent} event The player leave event to announce.
- */
-export function announceLeaves(event) {
-    DBRequests.Announce(`${event.playerName} left the game`);
-}
-
-/**
- * Announces the amount of days passed in the world
- */
-export function announceDays() {
-    // 1 is added since sleeping in a bed skips the time to 1 instead of 0
-    if (world.getTime() !== 1) return;
-    DBRequests.Announce(`__**Day ${(world.getAbsoluteTime() - 1) / 24000 + 1}**__`);
-}
-
-/**
- * Announces when a boss is defeated
- * @param {EntityHurtEvent} event 
- */
-export function announceBossKills(event) {
-    if (bossIds.includes(event.hurtEntity?.typeId) === false || event.hurtEntity.getComponent("health").current > 0) return;
-    const damagerName = event.damagingEntity?.name ?? event.damagingEntity?.nameTag ?? getEntityName(event.damagingEntity?.typeId);
-    if (damagerName === undefined) return;
-    const bossName = getEntityName(event.hurtEntity.typeId);
-    DBRequests.Announce(`${damagerName} has killed ${bossName.charAt(0) === 'E' ? `the` : `a`} ${bossName}!`);
-}
-
-/**
- * Announces when a Wither has been defeated. Must subscribe to `EntityHitEvent` since the final blow is not registered as an `EntityHurtEvent`.
- * @param {EntityHitEvent} event 
- */
-export function announceWitherKills(event) {
-    if (event.hitEntity.typeId !== 'minecraft:wither' || event.hitEntity.hasTag(`dead`) || event.hitEntity.getComponent("health").current > 0) return;
-    const damagerName = event.entity?.name ?? event.entity?.nameTag ?? getEntityName(event.entity?.typeId);
-    if (damagerName === undefined) return;
-    event.hitEntity.addTag(`dead`);
-    DBRequests.Announce(`${damagerName} has killed a Wither!`);
 }
