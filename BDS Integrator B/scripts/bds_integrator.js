@@ -1,12 +1,12 @@
-import { world } from "@minecraft/server";
+import { announceJoins, announceDeaths, announceLeaves, announceDays, announceBossKills, announceWitherKills } from "./announcements";
 import { variables } from "@minecraft/server-admin";
+import { world } from "@minecraft/server";
 import { DBRequests } from "./requests";
-import { announceJoins, announceDeaths, announceLeaves, announceDays } from "./announcements";
-import { chat } from "./chat";
 import { commands } from "./commands";
+import { messages } from "./messages";
 import { setupVoice } from "./voice";
 import { queueCheck } from "./queue";
-import { messages } from "./messages";
+import { chat } from "./chat";
 
 world.events.worldInitialize.subscribe(() => DBRequests.Initialize().then(response => {
     const validUUID = JSON.parse(response.body);
@@ -19,15 +19,17 @@ world.events.worldInitialize.subscribe(() => DBRequests.Initialize().then(respon
     world.say(messages.validUUID);
     if (variables.get("enable-chat") === true) {
         world.events.chat.subscribe(chat);
-        if (variables.get("announce-deaths") === true) world.events.entityHurt.subscribe(announceDeaths);
-        if (variables.get("announce-join-leave") === true) {
+        if (variables.get("announcements").deaths === true) world.events.entityHurt.subscribe(announceDeaths);
+        if (variables.get("announcements").days === true) world.events.tick.subscribe(announceDays);
+        if (variables.get("announcements").connections === true) {
             world.events.playerJoin.subscribe(announceJoins);
             world.events.playerLeave.subscribe(announceLeaves);
         }
-        if (variables.get("announce-days") === true) {
-            world.events.tick.subscribe(announceDays)
+        if (variables.get("announcements").bosses === true) {
+            world.events.entityHurt.subscribe(announceBossKills);
+            world.events.entityHit.subscribe(announceWitherKills);
         }
     }
-    if (variables.get("enable-voice") === true) setupVoice();
+    if (variables.get("voice-chat").enabled === true) setupVoice();
     queueCheck(0.5);
 }));

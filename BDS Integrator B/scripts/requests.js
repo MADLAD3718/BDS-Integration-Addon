@@ -145,7 +145,7 @@ export class DBRequests {
         request.addHeader("server-uuid", variables.get('server-uuid'))
         request.body = JSON.stringify({
             chat: variables.get("enable-chat"),
-            voice: variables.get("enable-voice")
+            voice: variables.get("voice-chat").enabled
         })
         request.method = HttpRequestMethod.POST;
 

@@ -1,5 +1,7 @@
-import { EntityHurtEvent, Player, PlayerJoinEvent, PlayerLeaveEvent, world } from "@minecraft/server";
+import { EntityHitEvent, EntityHurtEvent, Player, PlayerJoinEvent, PlayerLeaveEvent, world } from "@minecraft/server";
 import { DBRequests } from "./requests";
+
+const bossIds = ['minecraft:ender_dragon', 'minecraft:warden'];
 
 /**
  * Announces when a player kills another player.
@@ -141,5 +143,25 @@ export function announceLeaves(event) {
  */
 export function announceDays() {
     if (world.getTime() !== 0) return;
-    DBRequests.Announce(`Day ${Math.floor(world.getAbsoluteTime() / 24000)}`);
+    DBRequests.Announce(`__**Day ${world.getAbsoluteTime() / 24000 + 1}**__`);
+}
+
+/**
+ * Announces when a boss is defeated
+ * @param {EntityHurtEvent} event 
+ */
+export function announceBossKills(event) {
+    if (bossIds.includes(event.hurtEntity?.typeId) === false || event.hurtEntity.getComponent("health").current > 0) return;
+    const bossName = getEntityName(event.hurtEntity.typeId);
+    DBRequests.Announce(`${event.damagingEntity?.name ?? event.damagingEntity?.nameTag ?? getEntityName(event.damagingEntity.typeId)} has killed ${bossName.charAt(0) === 'E' ? `the` : `a`} ${bossName}!`);
+}
+
+/**
+ * Announces when a Wither has been defeated. Must subscribe to `EntityHitEvent` since the final blow is not registered as an `EntityHurtEvent`.
+ * @param {EntityHitEvent} event 
+ */
+export function announceWitherKills(event) {
+    if (event.hitEntity.typeId !== 'minecraft:wither' || event.hitEntity.hasTag(`dead`) || event.hitEntity.getComponent("health").current > 0) return;
+    event.hitEntity.addTag(`dead`);
+    DBRequests.Announce(`${event.entity?.name ?? event.entity?.nameTag ?? getEntityName(event.entity?.typeId)} has killled a Wither!`);
 }

@@ -33,7 +33,7 @@ export function setupVoice() {
             for (const otherPlayer of world.getPlayers(query)) {
                 if (groupedPlayers.has(otherPlayer.name)) continue;
                 const dist = CalculateDistance(otherPlayer.location, player.location);
-                const inRange = dist <= variables.get("group-range") && player.dimension.id === otherPlayer.dimension.id;
+                const inRange = dist <= variables.get("voice-chat").range && player.dimension.id === otherPlayer.dimension.id;
                 if (inRange !== true) continue;
                 groups.add(new Group(player, otherPlayer));
                 return;
@@ -151,8 +151,8 @@ class Group {
         } catch { }
     }
     getRange() {
-        const addition = (this.players.size - 2) * variables.get("player-addition") + variables.get("player-addition") / 2;
-        this.range = variables.get("group-range") / 2 + addition;
+        const addition = (this.players.size - 2) * variables.get("voice-chat").addition + variables.get("voice-chat").addition / 2;
+        this.range = variables.get("voice-chat").range / 2 + addition;
     }
     update() {
         this.getCenter();

@@ -8,10 +8,10 @@ export const messages = {
      * @param {Player} sender 
      */
     status: (sender) => {
-        let message = `Server connected to the BDS Integration database.\n§7Chat: §a${variables.get("enable-chat")}§r\n§7Voice: §a${variables.get("enable-voice")}§r`;
+        let message = `Server connected to the BDS Integration database.\n§7Chat: §a${variables.get("enable-chat")}§r\n§7Voice: §a${variables.get("voice-chat").enabled}§r`;
         const linked = sender.hasTag('linked');
         const linkDisplay = linked ? `§atrue§r` : `§4false§r`;
-        if (variables.get("enable-voice") === true) message += `\n§8Group Range: §a${variables.get("group-range")}\n§8Player Addition: §a${variables.get("player-addition")}§r`;
+        if (variables.get("voice-chat").enabled === true) message += `\n§8Group Range: §a${variables.get("voice-chat").range}\n§8Player Addition: §a${variables.get("voice-chat").addition}§r`;
         message += `\nLink Status: ${linkDisplay}`;
         return message;
     },
