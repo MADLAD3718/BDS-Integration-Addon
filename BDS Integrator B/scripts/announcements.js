@@ -139,7 +139,7 @@ export class Announcements {
      * @param {EntityHitEvent} event 
      */
     static WitherKills(event) {
-        if (event.hitEntity.typeId !== 'minecraft:wither' || event.hitEntity.hasTag(`dead`) || event.hitEntity.getComponent("health").current > 0) return;
+        if (event.hitEntity?.typeId !== 'minecraft:wither' || event.hitEntity?.hasTag(`dead`) || event.hitEntity?.getComponent("health").current > 0) return;
         const damagerName = event.entity?.name ?? event.entity?.nameTag ?? getEntityName(event.entity?.typeId);
         if (damagerName === undefined) return;
         event.hitEntity.addTag(`dead`);
