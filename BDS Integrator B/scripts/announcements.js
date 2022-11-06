@@ -143,8 +143,9 @@ export function announceLeaves(event) {
  * Announces the amount of days passed in the world
  */
 export function announceDays() {
-    if (world.getTime() !== 0) return;
-    DBRequests.Announce(`__**Day ${world.getAbsoluteTime() / 24000 + 1}**__`);
+    // 1 is added since sleeping in a bed skips the time to 1 instead of 0
+    if (world.getTime() !== 1) return;
+    DBRequests.Announce(`__**Day ${(world.getAbsoluteTime() - 1) / 24000 + 1}**__`);
 }
 
 /**
