@@ -152,8 +152,10 @@ export function announceDays() {
  */
 export function announceBossKills(event) {
     if (bossIds.includes(event.hurtEntity?.typeId) === false || event.hurtEntity.getComponent("health").current > 0) return;
+    const damagerName = event.damagingEntity?.name ?? event.damagingEntity?.nameTag ?? getEntityName(event.damagingEntity?.typeId);
+    if (damagerName === undefined) return;
     const bossName = getEntityName(event.hurtEntity.typeId);
-    DBRequests.Announce(`${event.damagingEntity?.name ?? event.damagingEntity?.nameTag ?? getEntityName(event.damagingEntity.typeId)} has killed ${bossName.charAt(0) === 'E' ? `the` : `a`} ${bossName}!`);
+    DBRequests.Announce(`${damagerName} has killed ${bossName.charAt(0) === 'E' ? `the` : `a`} ${bossName}!`);
 }
 
 /**
@@ -162,6 +164,8 @@ export function announceBossKills(event) {
  */
 export function announceWitherKills(event) {
     if (event.hitEntity.typeId !== 'minecraft:wither' || event.hitEntity.hasTag(`dead`) || event.hitEntity.getComponent("health").current > 0) return;
+    const damagerName = event.entity?.name ?? event.entity?.nameTag ?? getEntityName(event.entity?.typeId);
+    if (damagerName === undefined) return;
     event.hitEntity.addTag(`dead`);
-    DBRequests.Announce(`${event.entity?.name ?? event.entity?.nameTag ?? getEntityName(event.entity?.typeId)} has killled a Wither!`);
+    DBRequests.Announce(`${damagerName} has killed a Wither!`);
 }
