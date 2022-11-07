@@ -199,4 +199,21 @@ export class DBRequests {
 
         return http.request(unlinkRequest);
     }
+    /**
+     * Makes a request to the database to get the link status of a given player.
+     * @param {Player} player The player to get database link status of.
+     * @returns The database side link status of the player.
+     */
+    static CheckLink(player) {
+        const request = new HttpRequest(variables.get("webserver-address"));
+        request.addHeader("Content-Type", "application/json")
+        request.addHeader("mc-data-type", "link-check")
+        request.addHeader("server-uuid", variables.get('server-uuid'))
+        request.body = JSON.stringify({
+            player: player.name
+        });
+        request.method = HttpRequestMethod.POST;
+
+        return http.request(request)
+    }
 }

@@ -61,9 +61,15 @@ export function setupVoice() {
             })
         })
     })
-    world.events.playerLeave.subscribe(event => {
+    world.events.playerLeave.subscribe(({playerName}) => {
         groups.forEach(group => {
-            group.removePlayer(event.playerName);
+            group.removePlayer(playerName);
+        })
+    })
+    world.events.playerJoin.subscribe(({player}) => {
+        if (player.hasTag('linked') === false) DBRequests.CheckLink(player).then(({body}) => {
+            if (JSON.parse(body) === true) player.addTag('linked');
+            else player.dimension.runCommandAsync(`tellraw ${player.name} {"rawtext":[{"text":"This server has proximity voice chat enabled, but you haven't currently linked your Minecraft account with Discord. Use the §a${variables.get("command-prefix")} link§r command to link your account."}]}`).catch();
         })
     })
 }
