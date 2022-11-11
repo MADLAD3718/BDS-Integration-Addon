@@ -24,9 +24,9 @@
         // Enable death announcements
         "deaths": true,
         // Enable Join/Leave announcements
-        "connections": true,
+        "connections": false,
         // Enable day count announcements
-        "days": true,
+        "days": false,
         // Announce boss spawns and kills 
         "bosses": true
     },

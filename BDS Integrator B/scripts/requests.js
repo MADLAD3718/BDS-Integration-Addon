@@ -210,7 +210,24 @@ export class DBRequests {
         request.addHeader("mc-data-type", "link-check")
         request.addHeader("server-uuid", variables.get('server-uuid'))
         request.body = JSON.stringify({
-            player: player.name
+            player: player.name,
+            prefix: variables.get('command-prefix')
+        });
+        request.method = HttpRequestMethod.POST;
+
+        return http.request(request)
+    }
+    /**
+     * Sends a command response to the database.
+     * @returns
+     */
+    static RespondCommand(commandResponse) {
+        const request = new HttpRequest(variables.get("webserver-address"));
+        request.addHeader("Content-Type", "application/json")
+        request.addHeader("mc-data-type", "command-response")
+        request.addHeader("server-uuid", variables.get('server-uuid'))
+        request.body = JSON.stringify({
+            response: commandResponse
         });
         request.method = HttpRequestMethod.POST;
 
