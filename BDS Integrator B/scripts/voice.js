@@ -36,7 +36,6 @@ export function setupVoice() {
                 const inRange = dist <= variables.get("voice-chat").range && player.dimension.id === otherPlayer.dimension.id;
                 if (inRange !== true) continue;
                 groups.add(new Group(player, otherPlayer));
-                return;
             }
             // If no other players that were groupless were found, look for groups to join instead
             for (const group of groups) {
