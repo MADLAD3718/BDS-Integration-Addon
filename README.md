@@ -1,10 +1,10 @@
 # BDS-Integration-Addon
-A BDS add-on used to integrate bedrock servers with Discord. This add-on takes advantage of the HTTP protocol functions available in the `@minecraft/server-net` scripting module to interface with a Discord bot to achieve proximity voice chat and shared text communication.
+A Bedrock Dedicated Server add-on used to integrate minecraft worlds with Discord. This add-on takes advantage of the HTTP protocol functions available in the `@minecraft/server-net` scripting module to interface with a Discord bot, achieving proximity voice chat and shared text communication.
 
 ## Proximity Voice Chat:
 Proximity voice chat is achieved through organizing players into discrete groups, and sending the information to a Discord bot that manages a voice channel for every group. The bot creates and deletes voice channels according to the creation and deletion of player groups, and moves corresponding players into the voice channel of their current group.
 
-I created a [custom clustering argorithm](./BDS%20Integrator%20B/scripts/voice.js#L24) for the add-on after exploring a few commonly used argorithms (including DBScan) and concluding that none of them could sufficiently fulfill my project goals.
+After exploring a few commonly used clutering argorithms (including DBScan) and concluding that none of them could sufficiently fulfill my project goals, I created my own [custom clustering argorithm](./BDS%20Integrator%20B/scripts/voice.js#L24) for the add-on.
 
     for each cluster:
         update cluster center;
@@ -12,7 +12,7 @@ I created a [custom clustering argorithm](./BDS%20Integrator%20B/scripts/voice.j
             if player not in range of cluster:
                 remove player;
 
-    for each non-clustered player do:
+    for each non-clustered player:
         for every other non-clustered player:
             if player in range of other player:
                 add both players to new cluster;
