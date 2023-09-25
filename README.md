@@ -32,4 +32,5 @@ Shared text communication is achieved through a [simple relay](./BDS%20Integrato
 
 This functionality is additionally used to [announce certain events](./BDS%20Integrator%20B/scripts/announcements.js#L9) that transpire in game, such as a player death or the defeat of a high-difficulty enemy.
 
-Demo Video: [https://youtu.be/hPShwWwmTR4](https://youtu.be/hPShwWwmTR4)
+Demo Video:
+[![](https://img.youtube.com/vi/hPShwWwmTR4/maxresdefault.jpg)](http://www.youtube.com/watch?v=hPShwWwmTR4)
