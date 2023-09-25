@@ -1,16 +1,16 @@
 # BDS-Integration-Addon
-A Bedrock Dedicated Server add-on used to integrate minecraft worlds with Discord. This add-on takes advantage of the HTTP protocol functions available in the `@minecraft/server-net` scripting module to interface with a Discord bot, achieving proximity voice chat and shared text communication.
+A Bedrock Dedicated Server add-on used to integrate Minecraft worlds with Discord. This add-on takes advantage of the HTTP protocol functions available in the `@minecraft/server-net` scripting module to interface with a Discord bot, achieving proximity voice chat and shared text communication.
 
 ## Proximity Voice Chat:
-Proximity voice chat is achieved through organizing players into discrete groups, and sending the information to a Discord bot that manages a voice channel for every group. The bot creates and deletes voice channels according to the creation and deletion of player groups, and moves corresponding players into the voice channel of their current group.
+Proximity voice chat is achieved through organizing players into discrete groups and sending the information to a Discord bot that manages a voice channel for every group. The bot creates and deletes voice channels according to the creation and deletion of player groups, and moves corresponding players into the voice channel of their current group.
 
-After exploring a few commonly used clutering argorithms (including DBScan) and concluding that none of them could sufficiently fulfill my project goals, I created my own [custom clustering argorithm](./BDS%20Integrator%20B/scripts/voice.js#L24) for the add-on.
+After exploring a few commonly used clustering algorithms (including DBScan) and concluding that none of them could sufficiently fulfill my project goals, I created my own [custom clustering algorithm](./BDS%20Integrator%20B/scripts/voice.js#L24) for the add-on.
 
     for each cluster:
         update cluster center;
         for each player in cluster:
             if player not in range of cluster:
-                remove player;
+                remove player from cluster;
 
     for each non-clustered player:
         for every other non-clustered player:
@@ -25,12 +25,12 @@ After exploring a few commonly used clutering argorithms (including DBScan) and 
             if cluster in range of other cluster:
                 merge cluster into other cluster;
 
-The cluster center is calcultated by taking the average position of all players within the cluster. Initially cluster ranges were cylindrical, but after various playtesting sessions I determined that spherical ranges led to a better experience with the add-on. Cluster ranges are increased for every player within them, to prevent players from being left behind after a cluster merge.
+The cluster center is calculated by taking the average position of all players within the cluster. Initially, cluster ranges were cylindrical, but after various playtesting sessions I determined that spherical ranges led to a better experience with the add-on. Cluster ranges are increased for every player within them, to prevent players from being left behind after a cluster merge.
 
 ## Shared Text Communication:
-Shared text communication is achieved through a [simple relay](./BDS%20Integrator%20B/scripts/chat.js#L8) to the Discord bot. Text messages written by players in game are sent to the webserver hosting the bot, where the bot relays the messages in a text channel.
+Shared text communication is achieved through a [simple relay](./BDS%20Integrator%20B/scripts/chat.js#L8) to the Discord bot. Text messages written by players in the game are sent to the webserver hosting the bot, where the bot relays the messages in a text channel.
 
-This functionality is additionally used to [announce certain events](./BDS%20Integrator%20B/scripts/announcements.js#L9) that transpire in game, such as a player death or the defeat of a high-difficulty enemy.
+This functionality is additionally used to [announce certain events](./BDS%20Integrator%20B/scripts/announcements.js#L9) that transpire in the game, such as a player death or the defeat of a high-difficulty enemy.
 
 Demo Video:
 [![](https://img.youtube.com/vi/hPShwWwmTR4/maxresdefault.jpg)](http://www.youtube.com/watch?v=hPShwWwmTR4)
